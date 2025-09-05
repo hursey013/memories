@@ -1,5 +1,5 @@
 services:
-  app:
+  memories:
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     volumes:
-      # Bind-mount the source so edits reload instantly
-      - /volume1/docker/memories/src:/app/src:rw
+      - ./src:/app/src:rw
+      - ./cache:/app/cache:rw
     command: npm run dev
     restart: unless-stopped

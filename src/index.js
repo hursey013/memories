@@ -4,7 +4,6 @@ import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
 import { buildSmsText } from "./templates/smsText.js";
 import { sendApprise } from "./notify/appriseApi.js";
-import { fetchBinaryInsecure } from "./net/fetchBinary.js";
 import { loadPhotosIndex, savePhotosIndex } from "./cache/photosIndex.js";
 
 function toBucketKey(ts) {

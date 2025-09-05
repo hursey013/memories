@@ -63,9 +63,7 @@ export class SynologyClient {
   getThumbnailUrl(sid, photo, { size = "xl" } = {}) {
     const {
       id,
-      additional: {
-        thumbnail: { cache_key },
-      },
+      cache_key
     } = photo;
 
     return `https://${this.ip}/photo/webapi/entry.cgi?api=SYNO.${this.fotoSpace}.Thumbnail&version=1&method=get&mode=download&id=${id == cache_key.split("_")[0] ? id : cache_key.split("_")[0]}&type=unit&size=${size}&cache_key=${cache_key}&_sid=${sid}&verify=false`;
