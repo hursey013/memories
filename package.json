@@ -2,9 +2,9 @@
   "name": "memories-mailer",
   "version": "1.0.0",
   "type": "module",
-  "description": "Send a random past-day Synology photo by email",
+  "description": "Send a random on-this-day Synology photo via Apprise (SMS/MMS/Push) with PocketBase dedupe.",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "start": "node src/index.js",

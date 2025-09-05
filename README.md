@@ -1,45 +1,85 @@
-# memories
+# ✨ Memories: Synology → PocketBase → Apprise
 
-This project logs into **Synology Photos**, selects a random photo taken on **today’s month/day** from a **prior year**, and delivers a notification via **Apprise**.
+Send yourself a random **on-this-day** photo from your Synology Photos library — on a human-ish schedule — with **no repeats** until you’ve cycled through that day’s set. Built for self-hosters.
 
-This update focuses on **organization**, **naming**, **docs**, **tests**, and **robustness**.
+## What you get
+- 🔌 **Synology Photos** integration (self-signed TLS friendly)
+- 🗂️ **PocketBase** tracks what’s been sent (`photo_uid` per `MM-DD` bucket)
+- 📣 **Apprise API** sends SMS/MMS/Push via 100+ providers
+- ⏰ **Randomized timing** (or cron) so it feels organic
+- 🧪 **Tests & linting** ready to go (Vitest, ESLint, Prettier)
+- 🐳 **One Compose stack**: Node app + PocketBase + Apprise API
 
-## What’s improved
-- **Config parsing**: centralized and validated; numeric envs parsed safely.
-- **HTTP hardening**: timeouts + optional retries; insecure TLS scope kept minimal.
-- **Index builder**: extracted + tested month/day bucketing logic.
-- **Apprise client**: supports binary attachments (more reliable than URL fetches).
-- **Docs**: complete env reference; dev workflow with `node --watch`.
-- **Tests**: cache TTL expiry + index bucketing tests.
+---
 
-## Env variables (reference)
+## Quick start (Docker Compose)
 
-| Name | Description | Default |
-|---|---|---|
-| `NAS_IP` | Synology IP/host | — |
-| `USER_ID` / `USER_PASSWORD` | Synology credentials | — |
-| `FOTO_TEAM` | `"true"` for `FotoTeam` | `false` |
-| `THUMBNAIL_SIZE` | Synology size `s/m/l/xl` | `l` |
-| `APPRISE_URL` | Apprise API base URL | `http://localhost:8000` |
-| `APPRISE_KEY` | Stateful key for `/notify/{KEY}` | — |
-| `APPRISE_URLS` | Stateless targets if no key | — |
-| `PHOTOS_INDEX_PATH` | Cache file path | `./cache/photos-index.json` |
-| `PHOTOS_INDEX_TTL_SECONDS` | Cache TTL seconds | `604800` |
-| `HTTP_TIMEOUT_MS` | Timeout per HTTP call | `15000` |
-| `HTTP_RETRIES` | Retries for Synology JSON calls | `1` |
-| `CRON_EXPRESSION` | Cron schedule or empty to run once | — |
-| `FORCE_REFRESH` | `1` to invalidate cache this run | — |
+1) Copy `.env.example` → `.env` and edit the values.
+2) Bring up the stack:
+   ```bash
+   docker compose up -d
+   ```
+3) First run:
+   - PocketBase Admin → `http://localhost:8090/_/` → create admin.
+   - Create collection `sent_photos` with fields:
+     - `photo_uid` (text, required, **unique**)
+     - `bucket` (text) — e.g., `07-14`
+     - `taken_at` (number) — unix seconds (optional)
+     - `sent_at` (date) — when sent (optional)
+
+> On Synology, map ports as needed or use DSM Reverse Proxy for HTTPS.
+
+### Scheduling
+- **Randomized (default)**: controlled by the `RANDOM_*` envs (Poisson-thinned ticks).
+- **Cron**: set `RANDOM_ENABLED=false` and add `CRON_EXPRESSION` (example: `0 8 * * *`). For testing every 2 minutes: `*/2 * * * *`.
+
+---
+
+## How it works
+
+```
+Synology Photos --list/thumbnail--> Node app --(URL attachment)--> Apprise API --> SMS/MMS/Push
+       |                                                    |
+       '------ store sent photo_uids per MM-DD in PocketBase'
+```
+
+- Each day’s photos (by month/day) are sent **without repeats**. When a day’s pool is exhausted, we **reset that day’s bucket** and start over.
+- Attachments are sent to Apprise as **URLs** (no file uploads), keeping things simple and broadly compatible.
+
+---
 
 ## Development
-- Run locally:
-  ```bash
-  npm ci
-  npm run dev   # Node --watch
-  ```
 
-- Docker dev (Container Manager / Compose):
-  - `Dockerfile.dev` + `docker-compose.dev.yml` bind-mount `src/` and run `node --watch`.
+```bash
+npm i
+npm test
+npm run dev   # node --watch
+```
+Lint/format:
+```bash
+npm run lint
+npm run format
+```
 
-## Notes
-- If your NAS uses a self-signed cert, we scope TLS relaxation per call (no global side effects).
-- Sending the **image bytes** to Apprise avoids “Bad attachment” from URL fetch failures.
+### Dev Compose (hot reload)
+`compose.yaml` runs the app with `Dockerfile.dev` and bind-mounts `src/`. Use this for local iteration.
+
+---
+
+## Configuration (env)
+
+See `.env.example` for all variables. Highlights:
+
+- **Synology**: `NAS_IP`, `USER_ID`, `USER_PASSWORD`, `FOTO_TEAM` (use `true` for FotoTeam endpoints)
+- **PocketBase**: set `PB_URL`, `PB_ADMIN_EMAIL/PASSWORD`, `PB_COLLECTION`
+- **Apprise**: use **stateful** mode with `APPRISE_KEY`, or **stateless** with `APPRISE_URLS`
+- **Cache TTL**: `PHOTOS_INDEX_TTL_SECONDS` (default 7 days)
+- **Randomized timing**: `DAILY_RATE`, `MIN_GAP_MIN`, `MAX_PER_DAY`, `QUIET_START/END`, etc.
+
+---
+
+## Contributing
+
+PRs welcome! Please run `npm test` and `npm run lint` before submitting.
+
+Licensed under **MIT** — see [LICENSE](./LICENSE).

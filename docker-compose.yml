@@ -1,0 +1,44 @@
+version: "3.9"
+services:
+  memories:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memories
+    env_file:
+      - .env
+    depends_on:
+      - pocketbase
+      - apprise-api
+    environment:
+      - PB_URL=http://pocketbase:8090
+      - APPRISE_URL=http://apprise-api:8000
+      - NODE_ENV=production
+    volumes:
+      - ./cache:/app/cache
+    restart: unless-stopped
+
+  pocketbase:
+    image: pocketbase/pocketbase:latest
+    container_name: pocketbase
+    command: ["serve", "--http=0.0.0.0:8090", "--dir", "/pb_data", "--publicDir", "/pb_public"]
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./pb_data:/pb_data
+      - ./pb_public:/pb_public
+    restart: unless-stopped
+
+  apprise-api:
+    image: lscr.io/linuxserver/apprise-api:latest
+    container_name: apprise-api
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - APPRISE_ATTACH_SIZE=0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apprise_config:/config
+    restart: unless-stopped
