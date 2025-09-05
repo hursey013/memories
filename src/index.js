@@ -5,13 +5,7 @@ import { SynologyClient } from "./synology.js";
 import { buildSmsText } from "./templates/smsText.js";
 import { sendApprise } from "./notify/appriseApi.js";
 import { loadPhotosIndex, savePhotosIndex } from "./cache/photosIndex.js";
-
-function toBucketKey(ts) {
-  const d = new Date(ts * 1000);
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${mm}-${dd}`;
-}
+import { buildPhotosIndex } from "./cache/buildIndex.js";
 
 async function getOrBuildIndex(client, sid) {
   if (process.env.FORCE_REFRESH === "1") {
@@ -22,28 +16,7 @@ async function getOrBuildIndex(client, sid) {
 
   console.log("Building photos index (first run or cache expired)…");
   const photos = await client.listAllPhotos(sid);
-  const buckets = {};
-  let max_time = 0;
-
-  for (const p of photos) {
-    const entry = {
-      id: p.id,
-      time: p.time,
-      address: p?.additional?.address,
-      cache_key: p?.additional?.thumbnail?.cache_key,
-    };
-    max_time = Math.max(max_time, p.time);
-    const key = toBucketKey(p.time);
-    (buckets[key] ||= []).push(entry);
-  }
-
-  const index = {
-    built_at: new Date().toISOString(),
-    ttl_seconds: Number(process.env.PHOTOS_INDEX_TTL_SECONDS || 7 * 24 * 60 * 60),
-    max_time,
-    count: photos.length,
-    buckets,
-  };
+  const index = buildPhotosIndex(photos, config.cache.ttlSeconds);
   await savePhotosIndex(index);
   return index;
 }
@@ -85,7 +58,7 @@ async function runOnce() {
   console.log(`Sending via Apprise: ${text}`);
 
   await sendApprise({
-    title: "Memory",
+    title: "Memories",
     body: text,
     attachments: [thumbnailUrl], // Apprise can fetch an HTTP(S) URL
     // tag: "family" // optional: target a subset of your stored destinations

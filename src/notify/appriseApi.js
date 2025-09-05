@@ -1,36 +1,28 @@
-// Simple Apprise API client for Node (ESM).
-// Supports stateful (/notify/{KEY}) or stateless (/notify with urls=...).
 import { config } from "../config.js";
 
 function endpointPath() {
   if (config.apprise.key) return `/notify/${encodeURIComponent(config.apprise.key)}`;
-  return "/notify"; // stateless
+  return "/notify";
 }
+const baseUrl = () => (config.apprise.url || "http://localhost:8000").replace(/\/+$/, "");
 
 /**
  * Send a notification through Apprise API.
- * @param {Object} opts
- * @param {string} [opts.title] - Optional title
- * @param {string} [opts.body]  - Message body (text)
- * @param {string[]} [opts.attachments] - Array of URLs or file paths
- * @param {string|string[]} [opts.tag]   - Optional apprise tag(s)
- * @returns {Promise<void>}
+ * attachments: string URLs OR objects { filename, contentType, data: Buffer }
  */
 export async function sendApprise({ title, body, attachments = [], tag } = {}) {
-  const base = config.apprise.url.replace(/\/+$/, "");
-  const path = endpointPath();
-  const url = `${base}${path}`;
+  const base = baseUrl();
+  const url = `${base}${endpointPath()}`;
+  const hasFileObjects = attachments.some((a) => a && typeof a === "object" && "data" in a);
 
-  // Decide JSON vs multipart (attachments need multipart)
-  const usingAttachments = attachments && attachments.length > 0;
-
-  // Payload fields common to both modes
-  const baseFields = { title, body };
+  const baseFields = {};
+  if (title != null) baseFields.title = title;
+  if (body != null) baseFields.body = body;
   if (tag) baseFields.tag = Array.isArray(tag) ? tag.join(",") : tag;
 
-  // --- Stateful mode: /notify/{KEY} (no urls in request) ---
+  // Stateful mode
   if (config.apprise.key) {
-    if (!usingAttachments) {
+    if (!attachments.length) {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,33 +33,44 @@ export async function sendApprise({ title, body, attachments = [], tag } = {}) {
     }
     const form = new FormData();
     Object.entries(baseFields).forEach(([k, v]) => v != null && form.append(k, v));
-    for (const a of attachments) form.append("attachment", a);
+    for (const a of attachments) {
+      if (typeof a === "string") form.append("attachment", a);
+      else {
+        const blob = new Blob([a.data], { type: a.contentType || "application/octet-stream" });
+        form.append("attachment", blob, a.filename || "attachment.bin");
+      }
+    }
     const res = await fetch(url, { method: "POST", body: form });
     if (!res.ok) throw new Error(`Apprise failed: ${res.status} ${await res.text()}`);
     return;
   }
 
-  // --- Stateless mode: /notify + urls=... ---
-  if (!config.apprise.urls) {
-    throw new Error("Apprise stateless mode requires APPRISE_URLS in .env");
-  }
-  const targets = Array.isArray(config.apprise.urls)
-    ? config.apprise.urls.join(",")
-    : config.apprise.urls;
+  // Stateless mode
+  if (!config.apprise.urls) throw new Error("Apprise stateless mode requires APPRISE_URLS in .env");
+  const targets = Array.isArray(config.apprise.urls) ? config.apprise.urls.join(",") : config.apprise.urls;
 
-  if (!usingAttachments) {
-    const res = await fetch(url, {
+  if (!attachments.length || !hasFileObjects) {
+    const payload = { ...baseFields, urls: targets };
+    if (attachments.length && !hasFileObjects) payload.attachment = attachments;
+    const res = await fetch(`${base}/notify`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...baseFields, urls: targets }),
+      body: JSON.stringify(payload),
     });
     if (!res.ok) throw new Error(`Apprise failed: ${res.status} ${await res.text()}`);
     return;
   }
+
   const form = new FormData();
-  Object.entries(baseFields).forEach(([k, v]) => v != null && form.append(k, v));
   form.append("urls", targets);
-  for (const a of attachments) form.append("attachment", a);
-  const res = await fetch(url, { method: "POST", body: form });
+  Object.entries(baseFields).forEach(([k, v]) => v != null && form.append(k, v));
+  for (const a of attachments) {
+    if (typeof a === "string") form.append("attachment", a);
+    else {
+      const blob = new Blob([a.data], { type: a.contentType || "application/octet-stream" });
+      form.append("attachment", blob, a.filename || "attachment.bin");
+    }
+  }
+  const res = await fetch(`${base}/notify`, { method: "POST", body: form });
   if (!res.ok) throw new Error(`Apprise failed: ${res.status} ${await res.text()}`);
 }
