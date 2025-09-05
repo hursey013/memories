@@ -7,7 +7,7 @@ export function buildPhotosIndex(photos, ttlSeconds) {
     const entry = {
       id: p.id,
       time: p.time,
-      address: p?.additional?.address,
+      address: Object.entries(p?.additional?.address || {}).filter(([key]) => !key.endsWith("_id")).filter(([_, value]) => Boolean(value)).map(([_, value]) => value),
       cache_key: p?.additional?.thumbnail?.cache_key,
     };
     max_time = Math.max(max_time, p.time);

@@ -7,6 +7,7 @@ import { sendApprise } from "./notify/appriseApi.js";
 import { loadPhotosIndex, savePhotosIndex } from "./cache/photosIndex.js";
 import { buildPhotosIndex } from "./cache/buildIndex.js";
 import { startRandomScheduler } from "./schedule/randomSender.js";
+import { calculateYearsAgo } from "./utils/date.js";
 
 // PocketBase-based "already sent" helpers
 import {
@@ -80,7 +81,7 @@ async function runOnce() {
   // Pick one to send
   const picked = pool[Math.floor(Math.random() * pool.length)];
   const photoDate = new Date(picked.time * 1000);
-  const locationParts = picked?.address || {}; // note: index stores a flattened 'address' field
+  const locationParts = picked?.address;
   const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
 
   // Compose the SMS/MMS text body
@@ -90,7 +91,7 @@ async function runOnce() {
 
   // Send with URL attachment (no binary upload logic)
   await sendApprise({
-    title: "Memory",
+    title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
     body: text,
     attachments: [thumbnailUrl], // let the notifier fetch the image by URL
   });
