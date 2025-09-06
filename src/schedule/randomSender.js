@@ -5,9 +5,11 @@ import cron from "node-cron";
 import { randomCfg } from "../config.js";
 
 function toMinutes(hhmm) {
-  const [h, m] = String(hhmm || "00:00").split(":").map(Number);
-  const mins = (h * 60) + (m || 0);
-  return ((mins % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const [h, m] = String(hhmm || "00:00")
+    .split(":")
+    .map(Number);
+  const mins = h * 60 + (m || 0);
+  return ((mins % (24 * 60)) + 24 * 60) % (24 * 60);
 }
 
 export function isQuietNow(now = new Date()) {
@@ -45,7 +47,7 @@ function activeWindowMinutes() {
   const end = toMinutes(randomCfg.quietStart);
   if (start === end) return 24 * 60;
   if (start < end) return end - start;
-  return (24 * 60 - start) + end;
+  return 24 * 60 - start + end;
 }
 
 function shouldSendOnTick(now, state) {
@@ -64,7 +66,9 @@ function shouldSendOnTick(now, state) {
 export function startRandomScheduler(callback) {
   const tick = Math.max(1, Math.floor(randomCfg.tickMinutes));
   const expr = `*/${tick} * * * *`;
-  console.log(`[random-scheduler] enabled; cron=${expr} λ/day=${randomCfg.lambdaPerDay}, cap=${randomCfg.maxPerDay}`);
+  console.log(
+    `[random-scheduler] enabled; cron=${expr} λ/day=${randomCfg.lambdaPerDay}, cap=${randomCfg.maxPerDay}`,
+  );
   cron.schedule(expr, async () => {
     try {
       const now = new Date();

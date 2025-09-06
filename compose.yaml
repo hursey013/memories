@@ -1,0 +1,17 @@
+services:
+  memories:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memories-app
+    env_file:
+      - .env
+    environment:
+      - TZ=America/New_York
+      - APPRISE_URL=http://synlogy.lan:8000
+      - NODE_ENV=development
+    volumes:
+      - ./:/app              # bind-mount source
+      - /app/node_modules    # keep container deps separate from host
+      - ./cache:/app/cache   # app cache persists on host
+    restart: unless-stopped

@@ -10,9 +10,9 @@ module.exports = {
       {
         "newlines-between": "always",
         alphabetize: { order: "asc", caseInsensitive: true },
-        groups: [["builtin", "external"], ["internal"], ["parent", "sibling", "index"]]
-      }
-    ]
+        groups: [["builtin", "external"], ["internal"], ["parent", "sibling", "index"]],
+      },
+    ],
   },
-  settings: { "import/resolver": { node: true } }
+  settings: { "import/resolver": { node: true } },
 };

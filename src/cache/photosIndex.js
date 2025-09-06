@@ -49,7 +49,7 @@ export function entriesForBucket(index, bucket) {
 /** Return entries in a bucket with no sent_at, optionally filtered by predicate. */
 export function unsentForBucket(index, bucket, predicate) {
   const all = entriesForBucket(index, bucket);
-  return all.filter(e => !e.sent_at && (!predicate || predicate(e)));
+  return all.filter((e) => !e.sent_at && (!predicate || predicate(e)));
 }
 
 /** Mark a uid as sent (in-memory). Returns true if updated. */

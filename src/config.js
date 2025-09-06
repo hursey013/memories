@@ -16,12 +16,20 @@ const toInt = (v, def) => {
 
 const parseBool = (v, def = false) => {
   if (v == null) return def;
-  const s = String(v).trim().replace(/^['"]|['"]$/g, "").toLowerCase();
+  const s = String(v)
+    .trim()
+    .replace(/^['"]|['"]$/g, "")
+    .toLowerCase();
   return ["1", "true", "yes", "y", "on"].includes(s);
 };
 
 const parseDays = (s) =>
-  (s ? s.split(",").map(x => Number(String(x).trim())).filter(n => Number.isInteger(n) && n>=0 && n<=6) : [0,1,2,3,4,5,6]);
+  s
+    ? s
+        .split(",")
+        .map((x) => Number(String(x).trim()))
+        .filter((n) => Number.isInteger(n) && n >= 0 && n <= 6)
+    : [0, 1, 2, 3, 4, 5, 6];
 
 export const config = {
   nasIp: requireEnv("NAS_IP"),

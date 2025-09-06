@@ -23,8 +23,13 @@ export async function sendApprise({ title, body, attachments = [], tag } = {}) {
   const { base, endpoint } = buildApprise();
 
   // Stateless mode requires target URLs in a form field
-  const urls = config.apprise.key ? undefined :
-    (config.apprise.urls ? (Array.isArray(config.apprise.urls) ? config.apprise.urls.join(",") : String(config.apprise.urls)) : undefined);
+  const urls = config.apprise.key
+    ? undefined
+    : config.apprise.urls
+      ? Array.isArray(config.apprise.urls)
+        ? config.apprise.urls.join(",")
+        : String(config.apprise.urls)
+      : undefined;
 
   const form = new FormData();
   if (!config.apprise.key) {

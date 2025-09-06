@@ -10,8 +10,6 @@ export function calculateYearsAgo(date) {
 
 export function isSameMonthDayPastYear(date, day, month, currentYear = new Date().getFullYear()) {
   return (
-    date.getDate() === day &&
-    date.getMonth() + 1 === month &&
-    date.getFullYear() < currentYear
+    date.getDate() === day && date.getMonth() + 1 === month && date.getFullYear() < currentYear
   );
 }

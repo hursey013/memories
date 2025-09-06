@@ -3,6 +3,7 @@
 Send yourself a random **on-this-day** photo from your Synology Photos library — on a human-ish schedule — with **no repeats** until you’ve cycled through that day’s set. Built for self-hosters.
 
 ## What you get
+
 - 🔌 **Synology Photos** integration (self-signed TLS friendly)
 - 🗂️ **PocketBase** tracks what’s been sent (`photo_uid` per `MM-DD` bucket)
 - 📣 **Apprise API** sends SMS/MMS/Push via 100+ providers
@@ -14,12 +15,12 @@ Send yourself a random **on-this-day** photo from your Synology Photos library �
 
 ## Quick start (Docker Compose)
 
-1) Copy `.env.example` → `.env` and edit the values.
-2) Bring up the stack:
+1. Copy `.env.example` → `.env` and edit the values.
+2. Bring up the stack:
    ```bash
    docker compose up -d
    ```
-3) First run:
+3. First run:
    - PocketBase Admin → `http://localhost:8090/_/` → create admin.
    - Create collection `sent_photos` with fields:
      - `photo_uid` (text, required, **unique**)
@@ -30,6 +31,7 @@ Send yourself a random **on-this-day** photo from your Synology Photos library �
 > On Synology, map ports as needed or use DSM Reverse Proxy for HTTPS.
 
 ### Scheduling
+
 - **Randomized (default)**: controlled by the `RANDOM_*` envs (Poisson-thinned ticks).
 - **Cron**: set `RANDOM_ENABLED=false` and add `CRON_EXPRESSION` (example: `0 8 * * *`). For testing every 2 minutes: `*/2 * * * *`.
 
@@ -55,13 +57,16 @@ npm i
 npm test
 npm run dev   # node --watch
 ```
+
 Lint/format:
+
 ```bash
 npm run lint
 npm run format
 ```
 
 ### Dev Compose (hot reload)
+
 `compose.yaml` runs the app with `Dockerfile.dev` and bind-mounts `src/`. Use this for local iteration.
 
 ---
