@@ -17,8 +17,7 @@
   },
   "dependencies": {
     "dotenv": "^16.4.5",
-    "node-cron": "^3.0.3",
-    "pocketbase": "^0.26.2"
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "eslint": "^9.9.0",

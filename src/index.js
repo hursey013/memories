@@ -1,35 +1,56 @@
+// src/index.js
+import fs from "node:fs/promises";
 import cron from "node-cron";
 
 import { config, randomCfg } from "./config.js";
 import { SynologyClient } from "./synology.js";
 import { buildSmsText } from "./templates/smsText.js";
 import { sendApprise } from "./notify/appriseApi.js";
-import { loadPhotosIndex, savePhotosIndex } from "./cache/photosIndex.js";
+import {
+  loadPhotosIndex,
+  savePhotosIndex,
+  mergeSent,
+  entriesForBucket,
+  markSentInIndex,
+  clearBucket,
+} from "./cache/photosIndex.js";
 import { buildPhotosIndex } from "./cache/buildIndex.js";
 import { startRandomScheduler } from "./schedule/randomSender.js";
-import { calculateYearsAgo } from "./utils/date.js";
+import { photoUID } from "./lib/photoUid.js"; // if you decide to use plain `photo.id`, you can remove this
 
-// PocketBase-based "already sent" helpers
-import {
-  photoUID,
-  bucketKeyFromUnix,
-  loadSentSet,
-  markSent,
-  clearBucket,
-} from "./db/sentStore.pb.js";
+const CACHE_PATH = process.env.PHOTOS_INDEX_PATH || "./cache/photos-index.json";
 
 async function getOrBuildIndex(client, sid) {
+  // Optional testing aid: force refresh
   if (process.env.FORCE_REFRESH === "1") {
-    await savePhotosIndex({ built_at: "1970-01-01T00:00:00Z", ttl_seconds: 0, buckets: {} });
+    await savePhotosIndex({
+      built_at: "1970-01-01T00:00:00Z",
+      ttl_seconds: 0,
+      buckets: {},
+    });
   }
+
+  // If cache is valid, use it
   const cached = await loadPhotosIndex();
   if (cached) return cached;
 
+  // Build fresh from Synology
   console.log("Building photos index (first run or cache expired)…");
   const photos = await client.listAllPhotos(sid);
-  const index = buildPhotosIndex(photos, config.cache.ttlSeconds);
-  await savePhotosIndex(index);
-  return index;
+  const fresh = buildPhotosIndex(photos, config.cache.ttlSeconds);
+
+  // Try to load any prior index file (even if expired) to carry over sent_at
+  let old = null;
+  try {
+    const raw = await fs.readFile(CACHE_PATH, "utf-8");
+    old = JSON.parse(raw);
+  } catch {
+    // no old index present; that's fine
+  }
+
+  const merged = mergeSent(old, fresh);
+  await savePhotosIndex(merged);
+  return merged;
 }
 
 async function runOnce() {
@@ -40,16 +61,20 @@ async function runOnce() {
     fotoSpace: config.fotoSpace,
   });
 
-  console.log("Authenticating to Synology…");
+  // Build/refresh cache and carry forward sent_at
   const sid = await client.authenticate();
-
   const index = await getOrBuildIndex(client, sid);
 
   const today = new Date();
-  const bucket = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const bucket = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(
+    today.getDate(),
+  ).padStart(2, "0")}`;
 
-  // Gather candidates for today but from past years only
-  const candidates = (index.buckets[bucket] || []).filter((p) => {
+  // All entries for today's month/day
+  const allToday = entriesForBucket(index, bucket);
+
+  // Candidates: photos taken on this day in past years only
+  const candidates = allToday.filter((p) => {
     const y = new Date(p.time * 1000).getFullYear();
     return y < today.getFullYear();
   });
@@ -60,16 +85,13 @@ async function runOnce() {
     return;
   }
 
-  // Load "already sent" set for today's bucket from PocketBase
-  const sentSet = await loadSentSet(bucket);
+  // Filter to unsent (no sent_at)
+  let pool = candidates.filter((p) => !p.sent_at);
 
-  // Filter out already-sent photos
-  let pool = candidates.filter((p) => !sentSet.has(photoUID(p)));
-
-  // If we've exhausted the pool for this day, reset just this bucket and try again
+  // If exhausted, clear only this bucket and retry once
   if (pool.length === 0) {
     console.log(`All photos for ${bucket} were already sent. Resetting that bucket…`);
-    await clearBucket(bucket);
+    clearBucket(index, bucket);
     pool = candidates.slice();
   }
 
@@ -78,30 +100,32 @@ async function runOnce() {
     return;
   }
 
-  // Pick one to send
+  // Pick one at random
   const picked = pool[Math.floor(Math.random() * pool.length)];
   const photoDate = new Date(picked.time * 1000);
-  const locationParts = picked?.address;
+
+  // Location parts for the message body
+  const addr = picked?.address || {};
+  const locationParts = [addr.country, addr.state, addr.county, addr.city].filter(Boolean);
+
+  // Build thumbnail URL (let notifier fetch by URL)
   const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
 
-  // Compose the SMS/MMS text body
+  // Compose body text
   const text = buildSmsText({ photoDate, locationParts });
 
   console.log(`Sending via Apprise: ${text}`);
 
-  // Send with URL attachment (no binary upload logic)
+  // Send with URL attachment
   await sendApprise({
-    title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
+    title: "Memory",
     body: text,
-    attachments: [thumbnailUrl], // let the notifier fetch the image by URL
+    attachments: [thumbnailUrl],
   });
 
-  // Mark as sent in PocketBase (idempotent because photo_uid is unique)
-  await markSent({
-    photoUID: photoUID(picked),
-    bucket: bucketKeyFromUnix(picked.time),
-    takenAt: picked.time,
-  });
+  // Mark as sent in-memory, then persist atomically
+  markSentInIndex(index, photoUID(picked), new Date().toISOString());
+  await savePhotosIndex(index);
 
   console.log("Notification sent and recorded.");
 }
