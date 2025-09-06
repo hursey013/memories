@@ -58,15 +58,3 @@ export const config = {
   },
   cronExpression: process.env.CRON_EXPRESSION || null,
 };
-
-export const randomCfg = {
-  enabled: parseBool(process.env.RANDOM_ENABLED, false),
-  lambdaPerDay: Number(process.env.DAILY_RATE || 0.8),
-  maxPerDay: Number(process.env.MAX_PER_DAY || 2),
-  minGapMin: Number(process.env.MIN_GAP_MIN || 90),
-  tickMinutes: Number(process.env.TICK_MINUTES || 5),
-  quietStart: process.env.QUIET_START || "22:00",
-  quietEnd: process.env.QUIET_END || "07:30",
-  activeDays: parseDays(process.env.ACTIVE_DAYS || "0,1,2,3,4,5,6"),
-  statePath: process.env.SCHED_STATE_PATH || "./cache/schedule-state.json",
-};

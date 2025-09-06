@@ -2,7 +2,7 @@
 import fs from "node:fs/promises";
 import cron from "node-cron";
 
-import { config, randomCfg } from "./config.js";
+import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
 import { buildSmsText } from "./templates/smsText.js";
 import { sendApprise } from "./notify/appriseApi.js";
@@ -15,8 +15,8 @@ import {
   clearBucket,
 } from "./cache/photosIndex.js";
 import { buildPhotosIndex } from "./cache/buildIndex.js";
-import { startRandomScheduler } from "./schedule/randomSender.js";
-import { photoUID } from "./lib/photoUid.js"; // if you decide to use plain `photo.id`, you can remove this
+import { photoUID } from "./lib/photoUid.js";
+import { calculateYearsAgo } from "./utils/date.js";
 
 const CACHE_PATH = process.env.PHOTOS_INDEX_PATH || "./cache/photos-index.json";
 
@@ -105,8 +105,7 @@ async function runOnce() {
   const photoDate = new Date(picked.time * 1000);
 
   // Location parts for the message body
-  const addr = picked?.address || {};
-  const locationParts = [addr.country, addr.state, addr.county, addr.city].filter(Boolean);
+  const locationParts = picked?.address
 
   // Build thumbnail URL (let notifier fetch by URL)
   const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
@@ -118,7 +117,7 @@ async function runOnce() {
 
   // Send with URL attachment
   await sendApprise({
-    title: "Memory",
+    title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
     body: text,
     attachments: [thumbnailUrl],
   });
@@ -127,19 +126,17 @@ async function runOnce() {
   markSentInIndex(index, photoUID(picked), new Date().toISOString());
   await savePhotosIndex(index);
 
-  console.log("Notification sent and recorded.");
+  console.log("Notification sent and recorded");
 }
 
-// Scheduling: randomized sender if enabled; otherwise cron or one-shot
-if (randomCfg.enabled) {
-  startRandomScheduler(() => runOnce());
-} else if (!config.cronExpression) {
+if (!config.cronExpression) {
   runOnce().catch((err) => {
     console.error("Run failed:", err);
     process.exitCode = 1;
   });
 } else {
   console.log(`Scheduling with cron: ${config.cronExpression}`);
+
   cron.schedule(config.cronExpression, () => {
     runOnce().catch((err) => console.error("Scheduled run failed:", err));
   });

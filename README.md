@@ -7,7 +7,6 @@ Send yourself a random **on-this-day** photo from your Synology Photos library �
 - 🔌 **Synology Photos** integration (self-signed TLS friendly)
 - 🗂️ **PocketBase** tracks what’s been sent (`photo_uid` per `MM-DD` bucket)
 - 📣 **Apprise API** sends SMS/MMS/Push via 100+ providers
-- ⏰ **Randomized timing** (or cron) so it feels organic
 - 🧪 **Tests & linting** ready to go (Vitest, ESLint, Prettier)
 - 🐳 **One Compose stack**: Node app + PocketBase + Apprise API
 
@@ -32,8 +31,7 @@ Send yourself a random **on-this-day** photo from your Synology Photos library �
 
 ### Scheduling
 
-- **Randomized (default)**: controlled by the `RANDOM_*` envs (Poisson-thinned ticks).
-- **Cron**: set `RANDOM_ENABLED=false` and add `CRON_EXPRESSION` (example: `0 8 * * *`). For testing every 2 minutes: `*/2 * * * *`.
+- **Cron**: set `CRON_EXPRESSION` (example: `0 8 * * *`). For testing every 2 minutes: `*/2 * * * *`.
 
 ---
 
@@ -42,7 +40,7 @@ Send yourself a random **on-this-day** photo from your Synology Photos library �
 ```
 Synology Photos --list/thumbnail--> Node app --(URL attachment)--> Apprise API --> SMS/MMS/Push
        |                                                    |
-       '------ store sent photo_uids per MM-DD in PocketBase'
+       '------ store sent photo_uids per MM-DD'
 ```
 
 - Each day’s photos (by month/day) are sent **without repeats**. When a day’s pool is exhausted, we **reset that day’s bucket** and start over.
@@ -79,7 +77,6 @@ See `.env.example` for all variables. Highlights:
 - **PocketBase**: set `PB_URL`, `PB_ADMIN_EMAIL/PASSWORD`, `PB_COLLECTION`
 - **Apprise**: use **stateful** mode with `APPRISE_KEY`, or **stateless** with `APPRISE_URLS`
 - **Cache TTL**: `PHOTOS_INDEX_TTL_SECONDS` (default 7 days)
-- **Randomized timing**: `DAILY_RATE`, `MIN_GAP_MIN`, `MAX_PER_DAY`, `QUIET_START/END`, etc.
 
 ---
 
