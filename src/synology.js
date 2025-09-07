@@ -24,12 +24,12 @@ export class SynologyClient {
     return sid;
   }
 
-  async listAllPhotos(sid, { limit = 5000 } = {}) {
+  async listAllPhotos(sid, { limit = 50 } = {}) {
     let offset = 0;
     const all = [];
     while (true) {
-      const url = `https://${this.ip}/photo/webapi/entry.cgi?api=SYNO.${this.fotoSpace}.Browse.Item&version=1&method=list&type=photo&offset=${offset}&limit=${limit}&_sid=${sid}&additional=${encodeURIComponent(
-        JSON.stringify(["thumbnail", "address"]),
+      const url = `http://${this.ip}/photo/webapi/entry.cgi?api=SYNO.${this.fotoSpace}.Browse.Item&version=4&method=list&type=photo&offset=${offset}&limit=${limit}&_sid=${sid}&additional=${encodeURIComponent(
+        JSON.stringify(["thumbnail", "address", "person"]),
       )}`;
       const data = await fetchJson(url, {
         insecure: true,

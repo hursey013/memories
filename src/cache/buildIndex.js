@@ -1,10 +1,20 @@
+import { config } from "../config.js";
 import { photoUID } from "../lib/photoUid.js";
 
 export function buildPhotosIndex(photos, ttlSeconds) {
   const buckets = {};
   let max_time = 0;
+  let igonored = 0;
 
   for (const p of photos) {
+    if (
+      config.ignoredPeople &&
+      p?.additional?.person.some((obj) => config.ignoredPeople.includes(obj.name.toLowerCase()))
+    ) {
+      igonored++;
+      continue;
+    }
+
     const entry = {
       uid: photoUID(p),
       id: p.id,
@@ -28,7 +38,7 @@ export function buildPhotosIndex(photos, ttlSeconds) {
     built_at: new Date().toISOString(),
     ttl_seconds: ttlSeconds,
     max_time,
-    count: photos.length,
+    count: photos.length - igonored,
     buckets,
   };
 }

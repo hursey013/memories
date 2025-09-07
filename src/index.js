@@ -105,7 +105,7 @@ async function runOnce() {
   const photoDate = new Date(picked.time * 1000);
 
   // Location parts for the message body
-  const locationParts = picked?.address
+  const locationParts = picked?.address;
 
   // Build thumbnail URL (let notifier fetch by URL)
   const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
