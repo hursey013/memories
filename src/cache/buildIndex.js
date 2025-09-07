@@ -8,7 +8,7 @@ export function buildPhotosIndex(photos, ttlSeconds) {
 
   for (const p of photos) {
     if (
-      config.ignoredPeople &&
+      config.ignoredPeople.length &&
       p?.additional?.person.some((obj) => config.ignoredPeople.includes(obj.name.toLowerCase()))
     ) {
       igonored++;

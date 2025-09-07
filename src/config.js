@@ -37,7 +37,7 @@ export const config = {
   password: requireEnv("USER_PASSWORD"),
   fotoSpace: process.env.FOTO_TEAM === "true" ? "FotoTeam" : "Foto",
   thumbnailSize: process.env.THUMBNAIL_SIZE || "xl",
-  ignoredPeople: (process.env.FEATURES || "")
+  ignoredPeople: (process.env.IGNORED_PEOPLE || "")
     .split(",")
     .map((s) => s.toLowerCase().trim())
     .filter(Boolean),

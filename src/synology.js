@@ -28,8 +28,10 @@ export class SynologyClient {
     let offset = 0;
     const all = [];
     while (true) {
-      const url = `http://${this.ip}/photo/webapi/entry.cgi?api=SYNO.${this.fotoSpace}.Browse.Item&version=4&method=list&type=photo&offset=${offset}&limit=${limit}&_sid=${sid}&additional=${encodeURIComponent(
-        JSON.stringify(["thumbnail", "address", "person"]),
+      const url = `https://${this.ip}/photo/webapi/entry.cgi?api=SYNO.${this.fotoSpace}.Browse.Item&version=4&method=list&type=photo&offset=${offset}&limit=${limit}&_sid=${sid}&additional=${encodeURIComponent(
+        JSON.stringify(
+          ["thumbnail", "address", config.ignoredPeople.length ? "person" : null].filter(Boolean),
+        ),
       )}`;
       const data = await fetchJson(url, {
         insecure: true,
