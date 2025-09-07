@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildPhotosIndex } from "../src/cache/buildIndex.js";
+import { buildPhotosIndex } from "../src/cache.js";
 
 describe("buildPhotosIndex", () => {
   it("buckets by month-day and copies essential fields", () => {

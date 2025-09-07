@@ -1,5 +1,6 @@
+/** Tiny client for Synology Photos endpoints we need. */
 import { isSameMonthDayPastYear } from "./utils/date.js";
-import { fetchJson } from "./net/http.js";
+import { fetchJson } from "./http.js";
 import { config } from "./config.js";
 
 export class SynologyClient {

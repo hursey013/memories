@@ -1,11 +1,12 @@
+/** App entrypoint: schedules or performs a single run. */
 // src/index.js
 import fs from "node:fs/promises";
 import cron from "node-cron";
 
 import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
-import { buildSmsText } from "./templates/smsText.js";
-import { sendApprise } from "./notify/appriseApi.js";
+import { buildMessage } from "./message.js";
+import { sendApprise } from "./apprise.js";
 import {
   loadPhotosIndex,
   savePhotosIndex,
@@ -13,8 +14,8 @@ import {
   entriesForBucket,
   markSentInIndex,
   clearBucket,
-} from "./cache/photosIndex.js";
-import { buildPhotosIndex } from "./cache/buildIndex.js";
+} from "./cache.js";
+import { buildPhotosIndex } from "./cache.js";
 import { photoUID } from "./lib/photoUid.js";
 import { calculateYearsAgo } from "./utils/date.js";
 
@@ -111,7 +112,7 @@ async function runOnce() {
   const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
 
   // Compose body text
-  const text = buildSmsText({ photoDate, locationParts });
+  const text = buildMessage({ photoDate, locationParts });
 
   console.log(`Sending via Apprise: ${text}`);
 

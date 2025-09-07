@@ -1,4 +1,6 @@
-export function buildSmsText({ photoDate, locationParts }) {
+/** Message templating helpers */
+/** Formats the one-line message attached to a photo. */
+export function buildMessage({ photoDate, locationParts }) {
   // Example: "Taken on July 14, 2019 — Charlottesville, VA, USA"
   const dateText = photoDate.toLocaleString("en-US", { dateStyle: "long" });
   return locationParts.length

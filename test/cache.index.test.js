@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { loadPhotosIndex, savePhotosIndex } from "../src/cache/photosIndex.js";
+import { loadPhotosIndex, savePhotosIndex } from "../src/cache.js";
 import fs from "node:fs/promises";
 
 const TMP = "./cache/test-photos-index.json";

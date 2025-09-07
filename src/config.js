@@ -1,3 +1,4 @@
+/** Loads and validates environment configuration for the app. */
 import dotenv from "dotenv";
 dotenv.config();
 

@@ -1,3 +1,4 @@
+/** Date helpers used across the project. */
 export function calculateYearsAgo(date) {
   const today = new Date();
   let years = today.getFullYear() - date.getFullYear();

@@ -1,4 +1,5 @@
-import { config } from "../config.js";
+/** Minimal Apprise API client: POST /notify with optional KEY. */
+import { config } from "./config.js";
 
 /** Build base URL and endpoint for Apprise API. */
 function buildApprise() {
