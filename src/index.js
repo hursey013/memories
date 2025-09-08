@@ -29,7 +29,9 @@ async function runOnce() {
     // 2) Filter ignored people (if Synology returns people metadata)
     const ignored = config.ignoredPeople.map((x) => x.toLowerCase());
     const filtered = items.filter((p) => {
-      const people = p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) || [];
+      const people =
+        p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) ||
+        [];
       return !people.some((name) => ignored.includes(name));
     });
 
@@ -39,6 +41,9 @@ async function runOnce() {
       console.log("No new items to send for today's bucket.");
       return;
     }
+
+    console.log(`Found ${candidates.length} photos from ${month}/${day}`);
+
     const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
     // 4) Compose and send via Apprise
@@ -61,7 +66,7 @@ async function runOnce() {
     markSent(sent, photoUID(chosen), new Date().toISOString());
     await saveSent(sent);
 
-    console.log("Notification sent and recorded");
+    console.log("Notification sent and recorded", { chosen, thumbUrl });
   } finally {
     await client.logout(sid);
   }

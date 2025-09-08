@@ -33,7 +33,7 @@ export class SynologyClient {
   async listItems({ sid, offset = 0, limit = 1000, start_time, end_time }) {
     const params = new URLSearchParams({
       api: "SYNO.Foto.Browse.Item",
-      version: "4",
+      version: "1",
       method: "list",
       offset: String(offset),
       limit: String(limit),
@@ -53,8 +53,12 @@ export class SynologyClient {
   }
 
   #dayWindowEpochSeconds(year, month, day) {
-    const start = Math.floor(new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000);
-    const end = Math.floor(new Date(year, month - 1, day, 23, 59, 59).getTime() / 1000);
+    const start = Math.floor(
+      new Date(year, month - 1, day, 0, 0, 0).getTime() / 1000
+    );
+    const end = Math.floor(
+      new Date(year, month - 1, day, 23, 59, 59).getTime() / 1000
+    );
     return { start, end };
   }
 
@@ -64,7 +68,8 @@ export class SynologyClient {
     const currentYear = now.getFullYear();
     const yearsBack = Number(process.env.YEARS_BACK ?? 0);
     const minYear = Number(process.env.MIN_YEAR ?? 2000);
-    const startYear = yearsBack > 0 ? Math.max(currentYear - yearsBack, minYear) : minYear;
+    const startYear =
+      yearsBack > 0 ? Math.max(currentYear - yearsBack, minYear) : minYear;
     const results = [];
     for (let year = currentYear - 1; year >= startYear; year--) {
       const { start, end } = this.#dayWindowEpochSeconds(year, month, day);
@@ -93,6 +98,6 @@ export class SynologyClient {
         thumbnail: { cache_key },
       },
     } = photo;
-    return `https://${this.ip}/webapi/entry.cgi?api=SYNO.Foto.Thumbnail&version=1&method=get&mode=download&id=${id}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
+    return `https://${this.ip}/webapi/entry.cgi?api=SYNO.Foto.Thumbnail&version=1&method=get&mode=download&id=${id == cache_key.split("_")[0] ? id : cache_key.split("_")[0]}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
   }
 }
