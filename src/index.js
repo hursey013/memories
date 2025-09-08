@@ -1,133 +1,70 @@
-/** App entrypoint: schedules or performs a single run. */
-// src/index.js
-import fs from "node:fs/promises";
 import cron from "node-cron";
 
 import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
 import { buildMessage } from "./message.js";
 import { sendApprise } from "./apprise.js";
-import {
-  loadPhotosIndex,
-  savePhotosIndex,
-  mergeSent,
-  entriesForBucket,
-  markSentInIndex,
-  clearBucket,
-} from "./cache.js";
-import { buildPhotosIndex } from "./cache.js";
+import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID } from "./lib/photoUid.js";
-import { calculateYearsAgo } from "./utils/date.js";
-
-const CACHE_PATH = process.env.PHOTOS_INDEX_PATH || "./cache/photos-index.json";
-
-async function getOrBuildIndex(client, sid) {
-  // Optional testing aid: force refresh
-  if (process.env.FORCE_REFRESH === "1") {
-    await savePhotosIndex({
-      built_at: "1970-01-01T00:00:00Z",
-      ttl_seconds: 0,
-      buckets: {},
-    });
-  }
-
-  // If cache is valid, use it
-  const cached = await loadPhotosIndex();
-  if (cached) return cached;
-
-  // Build fresh from Synology
-  console.log("Building photos index (first run or cache expired)…");
-  const photos = await client.listAllPhotos(sid);
-  const fresh = buildPhotosIndex(photos, config.cache.ttlSeconds);
-
-  // Try to load any prior index file (even if expired) to carry over sent_at
-  let old = null;
-  try {
-    const raw = await fs.readFile(CACHE_PATH, "utf-8");
-    old = JSON.parse(raw);
-  } catch {
-    // no old index present; that's fine
-  }
-
-  const merged = mergeSent(old, fresh);
-  await savePhotosIndex(merged);
-  return merged;
-}
 
 async function runOnce() {
+  const sent = await loadSent();
+
   const client = new SynologyClient({
-    ip: config.nasIp,
-    user: config.user,
-    password: config.password,
-    fotoSpace: config.fotoSpace,
+    ip: config.synology.ip,
+    user: config.synology.user,
+    password: config.synology.password,
+    fotoSpace: config.synology.fotoSpace ? "FotoTeam" : "Foto",
   });
 
-  // Build/refresh cache and carry forward sent_at
   const sid = await client.authenticate();
-  const index = await getOrBuildIndex(client, sid);
+  try {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
 
-  const today = new Date();
-  const bucket = `${String(today.getMonth() + 1).padStart(2, "0")}-${String(
-    today.getDate(),
-  ).padStart(2, "0")}`;
+    // 1) Ask the NAS only for items for this calendar day across prior years
+    const items = await client.listByMonthDayViaRanges(sid, { month, day });
 
-  // All entries for today's month/day
-  const allToday = entriesForBucket(index, bucket);
+    // 2) Filter ignored people (if Synology returns people metadata)
+    const ignored = config.ignoredPeople.map((x) => x.toLowerCase());
+    const filtered = items.filter((p) => {
+      const people = p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) || [];
+      return !people.some((name) => ignored.includes(name));
+    });
 
-  // Candidates: photos taken on this day in past years only
-  const candidates = allToday.filter((p) => {
-    const y = new Date(p.time * 1000).getFullYear();
-    return y < today.getFullYear();
-  });
+    // 3) Choose first unsent at random
+    const candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
+    if (candidates.length === 0) {
+      console.log("No new items to send for today's bucket.");
+      return;
+    }
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
-  console.log(`Candidates for ${bucket} (past years): ${candidates.length}`);
-  if (candidates.length === 0) {
-    console.warn("No matching photos for this day in past years.");
-    return;
+    // 4) Compose and send via Apprise
+    const taken = new Date((chosen.time || chosen.created_time) * 1000);
+    const locationParts = Object.entries(chosen?.additional?.address || {})
+      .filter(([key]) => !key.endsWith("_id"))
+      .filter(([_, value]) => Boolean(value))
+      .map(([_, value]) => value);
+
+    const body = buildMessage({ photoDate: taken, locationParts });
+    const thumbUrl = client.getThumbnailUrl(sid, chosen);
+
+    await sendApprise({
+      title: "Memories",
+      body,
+      attachments: [thumbUrl],
+    });
+
+    // 5) Record sent
+    markSent(sent, photoUID(chosen), new Date().toISOString());
+    await saveSent(sent);
+
+    console.log("Notification sent and recorded");
+  } finally {
+    await client.logout(sid);
   }
-
-  // Filter to unsent (no sent_at)
-  let pool = candidates.filter((p) => !p.sent_at);
-
-  // If exhausted, clear only this bucket and retry once
-  if (pool.length === 0) {
-    console.log(`All photos for ${bucket} were already sent. Resetting that bucket…`);
-    clearBucket(index, bucket);
-    pool = candidates.slice();
-  }
-
-  if (pool.length === 0) {
-    console.warn("No candidates to send after reset.");
-    return;
-  }
-
-  // Pick one at random
-  const picked = pool[Math.floor(Math.random() * pool.length)];
-  const photoDate = new Date(picked.time * 1000);
-
-  // Location parts for the message body
-  const locationParts = picked?.address;
-
-  // Build thumbnail URL (let notifier fetch by URL)
-  const thumbnailUrl = client.getThumbnailUrl(sid, picked, { size: config.thumbnailSize });
-
-  // Compose body text
-  const text = buildMessage({ photoDate, locationParts });
-
-  console.log(`Sending via Apprise: ${text}`);
-
-  // Send with URL attachment
-  await sendApprise({
-    title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
-    body: text,
-    attachments: [thumbnailUrl],
-  });
-
-  // Mark as sent in-memory, then persist atomically
-  markSentInIndex(index, photoUID(picked), new Date().toISOString());
-  await savePhotosIndex(index);
-
-  console.log("Notification sent and recorded");
 }
 
 if (!config.cronExpression) {
@@ -137,7 +74,6 @@ if (!config.cronExpression) {
   });
 } else {
   console.log(`Scheduling with cron: ${config.cronExpression}`);
-
   cron.schedule(config.cronExpression, () => {
     runOnce().catch((err) => console.error("Scheduled run failed:", err));
   });
