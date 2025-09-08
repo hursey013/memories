@@ -1,17 +1,14 @@
 services:
-  memories:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: memories-app
     env_file:
       - .env
     environment:
       - TZ=America/New_York
       - APPRISE_URL=http://synology.lan:8000
-      - NODE_ENV=development
+      - NODE_ENV=production
     volumes:
-      - ./:/app              # bind-mount source
-      - /app/node_modules    # keep container deps separate from host
-      - ./cache:/app/cache   # app cache persists on host
+      - ./cache:/app/cache
     restart: unless-stopped

@@ -14,5 +14,5 @@ RUN addgroup -S app && adduser -S app -G app && \
     mkdir -p /app/cache && chown -R app:app /app
 USER app
 
-ENV NODE_ENV=development
-CMD ["npm", "run", "dev"]
+ENV NODE_ENV=production
+CMD ["npm", "start"]

@@ -11,9 +11,7 @@
     "dev": "node --watch src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier -w .",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "format": "prettier -w ."
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -23,7 +21,6 @@
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
-    "prettier": "^3.3.3",
-    "vitest": "^2.0.5"
+    "prettier": "^3.3.3"
   }
 }
