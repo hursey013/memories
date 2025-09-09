@@ -22,12 +22,14 @@ export const config = {
     user: requireEnv("USER_ID"),
     password: requireEnv("USER_PASSWORD"),
     fotoSpace: process.env.FOTO_TEAM === "true" ? "FotoTeam" : "Foto",
+    ignoredPeople: (process.env.IGNORED_PEOPLE || "")
+      .split(",")
+      .map((s) => s.toLowerCase().trim())
+      .filter(Boolean),
+    yearsBack: toInt(process.env.YEARS_BACK || 0),
+    minYear: toInt(process.env.MIN_YEAR || 2000),
+    sentPath: process.env.SENT_PATH || "./cache/sent.json",
   },
-  thumbnailSize: process.env.THUMBNAIL_SIZE || "xl",
-  ignoredPeople: (process.env.IGNORED_PEOPLE || "")
-    .split(",")
-    .map((s) => s.toLowerCase().trim())
-    .filter(Boolean),
   apprise: {
     url: process.env.APPRISE_URL || "http://apprise-api:8000",
     key: process.env.APPRISE_KEY || null,

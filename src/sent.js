@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 
-const SENT_PATH = process.env.SENT_PATH || "./cache/sent.json";
+import { config } from "./config.js";
 
 /** Load or return empty sent map: { [photoUID]: sentAtISO } */
 export async function loadSent() {
@@ -13,9 +13,9 @@ export async function loadSent() {
 }
 
 export async function saveSent(map) {
-  const dir = SENT_PATH.split("/").slice(0, -1).join("/");
+  const dir = config.synology.sentPath.split("/").slice(0, -1).join("/");
   if (dir) await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(SENT_PATH, JSON.stringify(map, null, 2));
+  await fs.writeFile(config.synology.sentPath, JSON.stringify(map, null, 2));
 }
 
 export function wasSent(map, uid) {

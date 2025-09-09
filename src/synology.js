@@ -64,8 +64,8 @@ export class SynologyClient {
   async listByMonthDayViaRanges(sid, { month, day }) {
     const now = new Date();
     const currentYear = now.getFullYear();
-    const yearsBack = Number(process.env.YEARS_BACK ?? 0);
-    const minYear = Number(process.env.MIN_YEAR ?? 2000);
+    const yearsBack = config.synology.yearsBack;
+    const minYear = config.synology.minYear;
     const startYear =
       yearsBack > 0 ? Math.max(currentYear - yearsBack, minYear) : minYear;
     const results = [];

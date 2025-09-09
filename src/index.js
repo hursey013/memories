@@ -8,8 +8,6 @@ import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 
 async function runOnce() {
-  const sent = await loadSent();
-
   const client = new SynologyClient({
     ip: config.synology.ip,
     user: config.synology.user,
@@ -27,7 +25,7 @@ async function runOnce() {
     const items = await client.listByMonthDayViaRanges(sid, { month, day });
 
     // 2) Filter ignored people (if Synology returns people metadata)
-    const ignored = config.ignoredPeople.map((x) => x.toLowerCase());
+    const ignored = config.synology.ignoredPeople.map((x) => x.toLowerCase());
     const filtered = items.filter((p) => {
       const people =
         p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) ||
@@ -36,30 +34,25 @@ async function runOnce() {
     });
 
     // 3) Choose first unsent at random
+    const sent = await loadSent();
     const candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
     if (candidates.length === 0) {
-      console.log("No new items to send for today's bucket.");
+      console.log("No new items to send for today");
       return;
     }
-
     console.log(`Found ${candidates.length} photos from ${month}/${day}`);
-
     const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
     // 4) Compose and send via Apprise
-    const photoDate = new Date((chosen.time || chosen.created_time) * 1000);
-    const locationParts = Object.entries(chosen?.additional?.address || {})
-      .filter(([key]) => !key.endsWith("_id"))
-      .filter(([_, value]) => Boolean(value))
-      .map(([_, value]) => value);
-
-    const body = buildMessage({ photoDate, locationParts });
-    const thumbUrl = client.getThumbnailUrl(sid, chosen);
+    const photoDate = new Date(chosen.time * 1000);
 
     await sendApprise({
       title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
-      body,
-      attachments: [thumbUrl],
+      body: buildMessage({
+        photoDate,
+        locationParts: chosen?.additional?.address,
+      }),
+      attachments: [client.getThumbnailUrl(sid, chosen)],
     });
 
     // 5) Record sent
