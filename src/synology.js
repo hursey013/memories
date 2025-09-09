@@ -11,22 +11,20 @@ export class SynologyClient {
     this.fotoSpace = fotoSpace;
   }
   async authenticate() {
-    const url = `https://${this.ip}/photo/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account=${encodeURIComponent(this.user)}&passwd=${encodeURIComponent(this.password)}`;
+    const url = `http://${this.ip}/photo/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=login&account=${encodeURIComponent(this.user)}&passwd=${encodeURIComponent(this.password)}`;
     const data = await fetchJson(url, {
       timeoutMs: config.http.timeoutMs,
       retries: config.http.retries,
-      insecure: true,
     });
     if (!data?.data?.sid) throw new Error("Auth failed");
     return data.data.sid;
   }
   async logout(sid) {
     try {
-      const url = `https://${this.ip}/photo/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=logout&_sid=${sid}`;
+      const url = `http://${this.ip}/photo/webapi/auth.cgi?api=SYNO.API.Auth&version=3&method=logout&_sid=${sid}`;
       await fetchJson(url, {
         timeoutMs: config.http.timeoutMs,
         retries: config.http.retries,
-        insecure: true,
       });
     } catch {}
   }
@@ -43,11 +41,10 @@ export class SynologyClient {
     if (start_time != null) params.set("start_time", String(start_time));
     if (end_time != null) params.set("end_time", String(end_time));
     if (config.synology.fotoTeam) params.set("space", "team");
-    const url = `https://${this.ip}/photo/webapi/entry.cgi?${params.toString()}&_sid=${sid}`;
+    const url = `http://${this.ip}/photo/webapi/entry.cgi?${params.toString()}&_sid=${sid}`;
     const data = await fetchJson(url, {
       timeoutMs: config.http.timeoutMs,
       retries: config.http.retries,
-      insecure: true,
     });
     if (!data?.success) throw new Error("listItems failed");
     return data?.data ?? { list: [], total: 0 };
@@ -100,6 +97,6 @@ export class SynologyClient {
       },
     } = photo;
 
-    return `https://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${photoUID(photo)}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
+    return `http://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${photoUID(photo)}&type=unit&size=xl&cache_key=${cache_key}`;
   }
 }
