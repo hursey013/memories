@@ -33,7 +33,7 @@ export class SynologyClient {
   async listItems({ sid, offset = 0, limit = 1000, start_time, end_time }) {
     const params = new URLSearchParams({
       api: "SYNO.Foto.Browse.Item",
-      version: "1",
+      version: "5",
       method: "list",
       offset: String(offset),
       limit: String(limit),
@@ -98,6 +98,7 @@ export class SynologyClient {
         thumbnail: { cache_key },
       },
     } = photo;
-    return `https://${this.ip}/webapi/entry.cgi?api=SYNO.Foto.Thumbnail&version=1&method=get&mode=download&id=${id == cache_key.split("_")[0] ? id : cache_key.split("_")[0]}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
+
+    return `https://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${id == cache_key.split("_")[0] ? id : cache_key.split("_")[0]}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
   }
 }
