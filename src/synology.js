@@ -1,5 +1,6 @@
 import { fetchJson } from "./http.js";
 import { config } from "./config.js";
+import { photoUID } from "./utils.js";
 
 /** Synology client with efficient day-focused listing using start_time/end_time. */
 export class SynologyClient {
@@ -99,6 +100,6 @@ export class SynologyClient {
       },
     } = photo;
 
-    return `https://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${id == cache_key.split("_")[0] ? id : cache_key.split("_")[0]}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
+    return `https://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${photoUID(photo)}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}&verify=false`;
   }
 }

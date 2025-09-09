@@ -5,7 +5,7 @@ import { SynologyClient } from "./synology.js";
 import { buildMessage } from "./message.js";
 import { sendApprise } from "./apprise.js";
 import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
-import { photoUID } from "./lib/photoUid.js";
+import { photoUID } from "./utils.js";
 
 async function runOnce() {
   const sent = await loadSent();
