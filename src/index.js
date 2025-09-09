@@ -5,7 +5,7 @@ import { SynologyClient } from "./synology.js";
 import { buildMessage } from "./message.js";
 import { sendApprise } from "./apprise.js";
 import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
-import { photoUID } from "./utils.js";
+import { photoUID, calculateYearsAgo } from "./utils.js";
 
 async function runOnce() {
   const sent = await loadSent();
@@ -47,17 +47,17 @@ async function runOnce() {
     const chosen = candidates[Math.floor(Math.random() * candidates.length)];
 
     // 4) Compose and send via Apprise
-    const taken = new Date((chosen.time || chosen.created_time) * 1000);
+    const photoDate = new Date((chosen.time || chosen.created_time) * 1000);
     const locationParts = Object.entries(chosen?.additional?.address || {})
       .filter(([key]) => !key.endsWith("_id"))
       .filter(([_, value]) => Boolean(value))
       .map(([_, value]) => value);
 
-    const body = buildMessage({ photoDate: taken, locationParts });
+    const body = buildMessage({ photoDate, locationParts });
     const thumbUrl = client.getThumbnailUrl(sid, chosen);
 
     await sendApprise({
-      title: "Memories",
+      title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
       body,
       attachments: [thumbUrl],
     });
@@ -66,7 +66,7 @@ async function runOnce() {
     markSent(sent, photoUID(chosen), new Date().toISOString());
     await saveSent(sent);
 
-    console.log("Notification sent and recorded", { chosen, thumbUrl });
+    console.log("Notification sent and recorded", chosen);
   } finally {
     await client.logout(sid);
   }
