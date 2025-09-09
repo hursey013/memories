@@ -97,6 +97,6 @@ export class SynologyClient {
       },
     } = photo;
 
-    return `http://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${photoUID(photo)}&type=unit&size=xl&cache_key=${cache_key}`;
+    return `http://${this.ip}/synofoto/api/v2/p/Thumbnail/get?id=${photoUID(photo)}&type=unit&size=xl&cache_key=${cache_key}&_sid=${sid}`;
   }
 }
