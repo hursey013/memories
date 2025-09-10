@@ -61,7 +61,7 @@ services:
 
 </details>
 
-<details>
+<details open>
 
 <summary><h3>Option B — You don’t run Apprise yet (bundle it with Memories)</h3></summary>
 
@@ -124,6 +124,4 @@ That’s it! Each run picks a “this day in history” item from your Synology 
 
 ## Credits & Inspiration
 
-This project was inspired by [treyg/synology-photos-memories](https://github.com/treyg/synology-photos-memories)  
-and also benefits from the excellent work documenting Synology’s unofficial API by  
-[zeichensatz/SynologyPhotosAPI](https://github.com/zeichensatz/SynologyPhotosAPI).
+This project was inspired by [treyg/synology-photos-memories](https://github.com/treyg/synology-photos-memories) and also benefits from the excellent work documenting Synology’s unofficial API by [zeichensatz/SynologyPhotosAPI](https://github.com/zeichensatz/SynologyPhotosAPI).
