@@ -25,8 +25,6 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 
 When prompted, choose **Create using docker‑compose**, then copy and paste one of the examples below directly into the editor. Adjust the values for your environment, then click **Next** to deploy.
 
----
-
 <details open>
 
 <summary><h3>Option A — You already run Apprise API</h3></summary>
@@ -123,3 +121,9 @@ That’s it! Each run picks a “this day in history” item from your Synology 
 - **Schedule or run once?** Set `CRON_EXPRESSION` to a cron string to run daily. If you leave it blank, Memories runs once and exits.
 - **Where does it store data?** In the `./cache` folder mounted on your NAS (JSON index to keep track of previouslhy sent photos in order to avoid repeats). Safe to delete if you want to force a rebuild.
 - **Stuck?** Check container logs in **Container Manager → Containers → memories → Logs** for helpful messages.
+
+## Credits & Inspiration
+
+This project was inspired by [treyg/synology-photos-memories](https://github.com/treyg/synology-photos-memories)  
+and also benefits from the excellent work documenting Synology’s unofficial API by  
+[zeichensatz/SynologyPhotosAPI](https://github.com/zeichensatz/SynologyPhotosAPI).
