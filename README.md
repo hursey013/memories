@@ -30,7 +30,7 @@ When prompted, choose **Create using docker‑compose**, then copy and paste one
 
 <details open>
 
-<summary>Option A — You already run Apprise API</summary>
+<summary><h2>Option A — You already run Apprise API</h2></summary>
 
 ```yaml
 services:
@@ -71,7 +71,7 @@ services:
 
 <details>
 
-<summary>## Option B — You don’t run Apprise yet (bundle it with Memories)</summary>
+<summary><h2>Option B — You don’t run Apprise yet (bundle it with Memories)</h2></summary>
 
 ```yaml
 services:
@@ -126,7 +126,7 @@ services:
 
 <details>
 
-<summary>## Option C — No Apprise server (stateless): use `APPRISE_URLS`</summary>
+<summary><h2>Option C — No Apprise server (stateless): use `APPRISE_URLS`</h2></summary>
 
 This mode sends directly to one or more Apprise destinations without running Apprise API.
 
