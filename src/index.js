@@ -30,7 +30,7 @@ async function runOnce() {
       const people =
         p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) ||
         [];
-      return !people.some((name) => ignored.includes(name));
+      return p?.type !== "video" && !people.some((name) => ignored.includes(name));
     });
 
     // 3) Choose first unsent at random
