@@ -22,6 +22,10 @@ export const config = {
     user: requireEnv("USER_ID"),
     password: requireEnv("USER_PASSWORD"),
     fotoSpace: process.env.FOTO_TEAM === "true" ? "FotoTeam" : "Foto",
+    favoritePeople: (process.env.FAVORITE_PEOPLE || "")
+      .split(",")
+      .map((s) => s.toLowerCase().trim())
+      .filter(Boolean),
     ignoredPeople: (process.env.IGNORED_PEOPLE || "")
       .split(",")
       .map((s) => s.toLowerCase().trim())

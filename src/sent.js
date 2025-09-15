@@ -5,7 +5,7 @@ import { config } from "./config.js";
 /** Load or return empty sent map: { [photoUID]: sentAtISO } */
 export async function loadSent() {
   try {
-    const raw = await fs.readFile(SENT_PATH, "utf-8");
+    const raw = await fs.readFile(config.synology.sentPath, "utf-8");
     const data = JSON.parse(raw);
     if (data && typeof data === "object") return data;
   } catch {}

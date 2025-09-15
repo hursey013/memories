@@ -6,6 +6,7 @@ import { buildMessage } from "./message.js";
 import { sendApprise } from "./apprise.js";
 import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
+import { sortPhotosByWeight } from "./weight.js";
 
 async function runOnce() {
   const client = new SynologyClient({
@@ -24,14 +25,8 @@ async function runOnce() {
     // 1) Ask the NAS only for items for this calendar day across prior years
     const items = await client.listByMonthDayViaRanges(sid, { month, day });
 
-    // 2) Filter ignored people (if Synology returns people metadata)
-    const ignored = config.synology.ignoredPeople.map((x) => x.toLowerCase());
-    const filtered = items.filter((p) => {
-      const people =
-        p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) ||
-        [];
-      return !people.some((name) => ignored.includes(name));
-    });
+    // 2) Rank photos
+    const filtered = sortPhotosByWeight(items);
 
     // 3) Choose first unsent at random
     const sent = await loadSent();
@@ -41,7 +36,7 @@ async function runOnce() {
       return;
     }
     console.log(`Found ${candidates.length} photos from ${month}/${day}`);
-    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    const chosen = candidates[0];
 
     // 4) Compose and send via Apprise
     const photoDate = new Date(chosen.time * 1000);
