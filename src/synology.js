@@ -2,7 +2,7 @@ import { fetchJson } from "./http.js";
 import { config } from "./config.js";
 import { photoUID } from "./utils.js";
 
-/** Synology client with efficient day-focused listing using start_time/end_time. */
+/** Synology client using list_with_filter and aggregated time ranges. */
 export class SynologyClient {
   constructor({ ip, user, password, fotoSpace }) {
     this.ip = ip;
@@ -33,19 +33,22 @@ export class SynologyClient {
     } catch {}
   }
 
-  async listItems({ sid, offset = 0, limit = 100, start_time, end_time }) {
+  async listItems({ sid, offset = 0, limit = 1000, time }) {
     const params = new URLSearchParams({
       api: "SYNO.Foto.Browse.SimilarItem",
       version: "1",
-      method: "list",
+      method: "list_with_filter",
+      item_type: [0], // 0 = photos
       offset: String(offset),
       limit: String(limit),
-      additional: JSON.stringify(["thumbnail", "person", "address"]),
+      additional: JSON.stringify(["thumbnail", "person", "address", "exif"]),
     });
-    if (start_time != null) params.set("start_time", String(start_time));
-    if (end_time != null) params.set("end_time", String(end_time));
+    if (Array.isArray(time) && time.length > 0) {
+      params.set("time", JSON.stringify(time));
+    }
     if (config.synology.fotoTeam) params.set("space", "team");
     const url = `https://${this.ip}/photo/webapi/entry.cgi?${params.toString()}&_sid=${sid}`;
+
     const data = await fetchJson(url, {
       timeoutMs: config.http.timeoutMs,
       retries: config.http.retries,
@@ -65,7 +68,7 @@ export class SynologyClient {
     return { start, end };
   }
 
-  /** Query only this month/day in each prior year (server-side filter + pagination). */
+  /** Query only this month/day in each prior year using a single filtered request (with pagination). */
   async listByMonthDayViaRanges(sid, { month, day }) {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -73,23 +76,27 @@ export class SynologyClient {
     const minYear = config.synology.minYear;
     const startYear =
       yearsBack > 0 ? Math.max(currentYear - yearsBack, minYear) : minYear;
-    const results = [];
+    // Build time ranges for each year into a single filter
+    const time = [];
     for (let year = currentYear - 1; year >= startYear; year--) {
       const { start, end } = this.#dayWindowEpochSeconds(year, month, day);
-      let offset = 0;
-      const limit = 1000;
-      while (true) {
-        const { list = [], total = 0 } = await this.listItems({
-          sid,
-          offset,
-          limit,
-          start_time: start,
-          end_time: end,
-        });
-        results.push(...list);
-        offset += list.length;
-        if (offset >= total || list.length === 0) break;
-      }
+      time.push({ start_time: start, end_time: end });
+    }
+
+    // Single aggregated query with pagination
+    const results = [];
+    let offset = 0;
+    const limit = 1000;
+    while (true) {
+      const { list = [], total = 0 } = await this.listItems({
+        sid,
+        offset,
+        limit,
+        time,
+      });
+      results.push(...list);
+      offset += list.length;
+      if (offset >= total || list.length === 0) break;
     }
     return results;
   }

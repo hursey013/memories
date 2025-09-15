@@ -30,7 +30,7 @@ async function runOnce() {
       const people =
         p?.additional?.person?.map((o) => String(o.name || "").toLowerCase()) ||
         [];
-      return p?.type !== "video" && !people.some((name) => ignored.includes(name));
+      return !people.some((name) => ignored.includes(name));
     });
 
     // 3) Choose first unsent at random
@@ -50,7 +50,7 @@ async function runOnce() {
       title: `Memories (${calculateYearsAgo(photoDate)} years ago)`,
       body: buildMessage({
         photoDate,
-        locationParts: chosen?.additional?.address,
+        address: chosen?.additional?.address,
       }),
       attachments: [client.getThumbnailUrl(sid, chosen)],
     });
