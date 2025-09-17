@@ -8,6 +8,8 @@ import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 
+console.log(`Started at: ${new Date().toString()}`);
+
 async function runOnce() {
   const client = new SynologyClient({
     ip: config.synology.ip,
