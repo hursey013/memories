@@ -6,6 +6,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm i; fi
 
+# Ensure timezone data is available so TZ env works on Alpine
+RUN apk add --no-cache tzdata
+
 # Copy source (will be overridden by bind mount at runtime, but helps first build)
 COPY src ./src
 
