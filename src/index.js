@@ -7,6 +7,7 @@ import { sendApprise } from "./apprise.js";
 import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
+import { selectFromBursts } from "./burst.js";
 
 console.log(`Started at: ${new Date().toString()}`);
 
@@ -30,7 +31,7 @@ async function runOnce() {
     // 2) Rank photos
     const filtered = sortPhotosByWeight(items);
 
-    // 3) Choose first unsent at random
+    // 3) Filter unsent and select within "bursts" (photos within 5s)
     const sent = await loadSent();
     const candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
     if (candidates.length === 0) {
@@ -38,7 +39,10 @@ async function runOnce() {
       return;
     }
     console.log(`Found ${candidates.length} photos from ${month}/${day}`);
-    const chosen = candidates[0];
+
+    const { chosen, burst: chosenBurst } = selectFromBursts(candidates, {
+      windowSec: 5,
+    });
 
     // 4) Compose and send via Apprise
     const photoDate = new Date(chosen.time * 1000);
@@ -52,11 +56,18 @@ async function runOnce() {
       attachments: [client.getThumbnailUrl(sid, chosen)],
     });
 
-    // 5) Record sent
-    markSent(sent, photoUID(chosen), new Date().toISOString());
+    // 5) Record sent: chosen + all other photos from the chosen burst
+    const whenISO = new Date().toISOString();
+    for (const p of chosenBurst) {
+      markSent(sent, photoUID(p), whenISO);
+    }
     await saveSent(sent);
 
-    console.log("Notification sent and recorded", chosen);
+    console.log(
+      `Notification sent. Burst size: ${chosenBurst.length}. Chosen UID: ${photoUID(
+        chosen
+      )}`
+    );
   } finally {
     await client.logout(sid);
   }
