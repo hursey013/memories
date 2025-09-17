@@ -1,5 +1,9 @@
 FROM node:22-alpine
 
+# Optionally embed the git commit at build time: --build-arg GIT_SHA=$(git rev-parse --short=12 HEAD)
+ARG GIT_SHA
+ENV GIT_COMMIT=${GIT_SHA}
+
 WORKDIR /app
 
 # Install deps to a container-only node_modules (kept off your host via anonymous volume)

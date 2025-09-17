@@ -8,8 +8,11 @@ import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 import { selectFromBursts } from "./burst.js";
+import { getGitCommit } from "./version.js";
 
-console.log(`Started at: ${new Date().toString()}`);
+console.log(
+  `Started at: ${new Date().toString()} | commit: ${getGitCommit()}`
+);
 
 async function runOnce() {
   const client = new SynologyClient({
