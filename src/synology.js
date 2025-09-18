@@ -83,6 +83,8 @@ export class SynologyClient {
       time.push({ start_time: start, end_time: end });
     }
 
+    console.log(time);
+
     // Single aggregated query with pagination
     const results = [];
     let offset = 0;
