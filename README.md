@@ -42,7 +42,12 @@ services:
       FOTO_TEAM: "false" # set "true" if you use Team folders
 
       # --- Behavior & filtering ---
-      IGNORED_PEOPLE: "" # e.g. "Test Person,Someone"
+      FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
+      IGNORED_PEOPLE: ""
+      MIN_YEAR: 2000
+      YEARS_BACK: 0
+      DAY_OFFSET_DAYS: -1
+      MIN_WEIGHT: 0
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM
@@ -93,7 +98,12 @@ services:
       FOTO_TEAM: "false" # set "true" if you use Team folders
 
       # --- Behavior & filtering ---
-      IGNORED_PEOPLE: "" # e.g. "Test Person,Someone"
+      FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
+      IGNORED_PEOPLE: ""
+      MIN_YEAR: 2000
+      YEARS_BACK: 0
+      DAY_OFFSET_DAYS: -1
+      MIN_WEIGHT: 0
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM

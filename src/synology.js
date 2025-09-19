@@ -33,7 +33,7 @@ export class SynologyClient {
     } catch {}
   }
 
-  async listItems({ sid, offset = 0, limit = 1000, time }) {
+  async listItems({ sid, offset = 0, limit = 100, time }) {
     const params = new URLSearchParams({
       api: "SYNO.Foto.Browse.SimilarItem",
       version: "1",
@@ -86,7 +86,7 @@ export class SynologyClient {
     // Single aggregated query with pagination
     const results = [];
     let offset = 0;
-    const limit = 1000;
+    const limit = 100;
     while (true) {
       const { list = [], total = 0 } = await this.listItems({
         sid,

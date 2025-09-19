@@ -1,28 +1,72 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 
 import { config } from "./config.js";
 
-/** Load or return empty sent map: { [photoUID]: sentAtISO } */
-export async function loadSent() {
+export function makeDayKey(month, day) {
+  return `${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function entryPath(dayKey) {
+  return path.join(config.synology.sentDir, `${dayKey}.json`);
+}
+
+async function loadDay(dayKey) {
   try {
-    const raw = await fs.readFile(config.synology.sentPath, "utf-8");
+    const raw = await fs.readFile(entryPath(dayKey), "utf-8");
     const data = JSON.parse(raw);
-    if (data && typeof data === "object") return data;
+    return data && typeof data === "object" ? data : {};
   } catch {}
   return {};
 }
 
-export async function saveSent(map) {
-  const dir = config.synology.sentPath.split("/").slice(0, -1).join("/");
-  if (dir) await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(config.synology.sentPath, JSON.stringify(map, null, 2));
+async function saveDay(dayKey, map) {
+  const target = entryPath(dayKey);
+  const dir = path.dirname(target);
+  await fs.mkdir(dir, { recursive: true });
+  await fs.writeFile(target, JSON.stringify(map, null, 2));
+}
+
+export async function loadSent(dayKey) {
+  if (!dayKey) return {};
+  return loadDay(dayKey);
+}
+
+export async function saveSent(dayKey, map) {
+  if (!dayKey) return;
+  await saveDay(dayKey, map);
 }
 
 export function wasSent(map, uid) {
-  return !!map[uid];
+  return Boolean(map?.[uid]);
 }
 
-export function markSent(map, uid, whenISO = new Date().toISOString()) {
-  map[uid] = whenISO;
+export function markSent(
+  map,
+  uid,
+  { whenISO = new Date().toISOString(), photoDate, photoTimestamp = null } = {}
+) {
+  let photoDateISO = null;
+  let derivedPhotoTimestamp = photoTimestamp;
+
+  if (photoDate instanceof Date && !Number.isNaN(photoDate.valueOf())) {
+    derivedPhotoTimestamp = derivedPhotoTimestamp ?? photoDate.getTime();
+    photoDateISO = photoDate.toISOString();
+  }
+
+  map[uid] = {
+    when: whenISO,
+    photoTimestamp: derivedPhotoTimestamp,
+    photoDateISO,
+  };
   return map;
+}
+
+export async function clearSentForDay(dayKey) {
+  if (!dayKey) return false;
+  try {
+    await fs.unlink(entryPath(dayKey));
+    return true;
+  } catch {}
+  return false;
 }

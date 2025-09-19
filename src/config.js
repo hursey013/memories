@@ -1,4 +1,6 @@
 /** Loads and validates environment configuration for the app. */
+import path from "node:path";
+
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -32,8 +34,9 @@ export const config = {
       .filter(Boolean),
     yearsBack: toInt(process.env.YEARS_BACK || 0),
     minYear: toInt(process.env.MIN_YEAR || 2000),
-    sentPath: process.env.SENT_PATH || "./cache/sent.json",
+    sentDir: process.env.SENT_DIR || "./cache",
     dayOffsetDays: toInt(process.env.DAY_OFFSET_DAYS || 0),
+    minWeight: toInt(process.env.MIN_WEIGHT, 0),
   },
   apprise: {
     url: process.env.APPRISE_URL || "http://apprise-api:8000",

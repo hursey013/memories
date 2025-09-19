@@ -1,7 +1,7 @@
 import { config } from "./config.js";
 
 const {
-  synology: { ignoredPeople, favoritePeople },
+  synology: { ignoredPeople, favoritePeople, minWeight },
 } = config;
 
 export function sortPhotosByWeight(items) {
@@ -19,8 +19,13 @@ export function sortPhotosByWeight(items) {
     weight: calculateWeight(p),
   }));
 
+  const threshold = Number.isFinite(minWeight) ? minWeight : Number.NEGATIVE_INFINITY;
+  const aboveThreshold = scored.filter(
+    (p) => (p.weight ?? Number.NEGATIVE_INFINITY) >= threshold
+  );
+
   // 3) Sort best-first
-  return scored.sort((a, b) => b.weight - a.weight);
+  return aboveThreshold.sort((a, b) => b.weight - a.weight);
 }
 
 export function calculateWeight(p) {

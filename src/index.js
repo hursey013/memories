@@ -4,15 +4,19 @@ import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
 import { buildMessage } from "./message.js";
 import { sendApprise } from "./apprise.js";
-import { loadSent, saveSent, wasSent, markSent } from "./sent.js";
+import {
+  loadSent,
+  saveSent,
+  wasSent,
+  markSent,
+  clearSentForDay,
+  makeDayKey,
+} from "./sent.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 import { selectFromBursts } from "./burst.js";
-import { getGitCommit } from "./version.js";
 
-console.log(
-  `Started at: ${new Date().toString()} | commit: ${getGitCommit()}`
-);
+console.log(`Started at: ${new Date().toString()}`);
 
 async function runOnce() {
   const client = new SynologyClient({
@@ -29,6 +33,7 @@ async function runOnce() {
     if (offsetDays !== 0) targetDate.setDate(targetDate.getDate() + offsetDays);
     const month = targetDate.getMonth() + 1;
     const day = targetDate.getDate();
+    const dayKey = makeDayKey(month, day);
 
     if (offsetDays !== 0) {
       console.log(
@@ -43,19 +48,26 @@ async function runOnce() {
     const filtered = sortPhotosByWeight(items);
 
     // 3) Filter unsent and select within "bursts" (photos within 5s)
-    const sent = await loadSent();
-    const candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
+    let sent = await loadSent(dayKey);
+    let candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
     if (candidates.length === 0) {
-      console.log("No new items to send for today");
-      return;
+      const cleared = await clearSentForDay(dayKey);
+      if (cleared) {
+        sent = {};
+        console.log(`Reset sent cache for ${dayKey}; cleared existing entries.`);
+        candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
+      }
+      if (candidates.length === 0) {
+        console.log("No new items to send for today");
+        return;
+      }
     }
     console.log(`Found ${candidates.length} photos from ${month}/${day}`);
 
-    const { chosen, burst: chosenBurst } = selectFromBursts(candidates, {
-      windowSec: 5,
-    });
+    // 4) Detect bursts of photos
+    const { chosen, burst: chosenBurst } = selectFromBursts(candidates);
 
-    // 4) Compose and send via Apprise
+    // 5) Compose and send via Apprise
     const photoDate = new Date(chosen.time * 1000);
 
     await sendApprise({
@@ -67,17 +79,25 @@ async function runOnce() {
       attachments: [client.getThumbnailUrl(sid, chosen)],
     });
 
-    // 5) Record sent: chosen + all other photos from the chosen burst
+    // 6) Record sent: chosen + all other photos from the chosen burst
     const whenISO = new Date().toISOString();
     for (const p of chosenBurst) {
-      markSent(sent, photoUID(p), whenISO);
+      const timestampMs =
+        typeof p?.time === "number" && Number.isFinite(p.time) ? p.time * 1000 : null;
+      const photoDateForEntry = timestampMs ? new Date(timestampMs) : photoDate;
+      markSent(sent, photoUID(p), {
+        whenISO,
+        photoDate: photoDateForEntry,
+        photoTimestamp: timestampMs,
+      });
     }
-    await saveSent(sent);
+    await saveSent(dayKey, sent);
 
     console.log(
       `Notification sent. Burst size: ${chosenBurst.length}. Chosen UID: ${photoUID(
         chosen
-      )}`
+      )}`,
+      chosen
     );
   } finally {
     await client.logout(sid);
