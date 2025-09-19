@@ -33,6 +33,7 @@ export const config = {
     yearsBack: toInt(process.env.YEARS_BACK || 0),
     minYear: toInt(process.env.MIN_YEAR || 2000),
     sentPath: process.env.SENT_PATH || "./cache/sent.json",
+    dayOffsetDays: toInt(process.env.DAY_OFFSET_DAYS || 0),
   },
   apprise: {
     url: process.env.APPRISE_URL || "http://apprise-api:8000",

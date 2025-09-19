@@ -24,9 +24,17 @@ async function runOnce() {
 
   const sid = await client.authenticate();
   try {
-    const today = new Date();
-    const month = today.getMonth() + 1;
-    const day = today.getDate();
+    const offsetDays = config.synology.dayOffsetDays || 0;
+    const targetDate = new Date();
+    if (offsetDays !== 0) targetDate.setDate(targetDate.getDate() + offsetDays);
+    const month = targetDate.getMonth() + 1;
+    const day = targetDate.getDate();
+
+    if (offsetDays !== 0) {
+      console.log(
+        `Applying day offset (${offsetDays}) -> querying ${month}/${day}`
+      );
+    }
 
     // 1) Ask the NAS only for items for this calendar day across prior years
     const items = await client.listByMonthDayViaRanges(sid, { month, day });
