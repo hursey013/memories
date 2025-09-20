@@ -13,6 +13,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare environment defaults
+        run: cp .env.example .env
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
