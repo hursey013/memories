@@ -16,14 +16,14 @@ import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 import { selectFromBursts } from "./burst.js";
 
-console.log(`Started at: ${new Date().toString()}`);
+console.log(`🌅 Memories starting at ${new Date().toString()}`);
 
 async function runOnce() {
   const client = new SynologyClient({
     ip: config.synology.ip,
     user: config.synology.user,
     password: config.synology.password,
-    fotoSpace: config.synology.fotoSpace ? "FotoTeam" : "Foto",
+    useTeamSpace: config.synology.useTeamSpace,
   });
 
   const sid = await client.authenticate();
@@ -55,16 +55,15 @@ async function runOnce() {
       if (cleared) {
         sent = {};
         console.log(
-          `Reset sent cache for ${dayKey}; cleared existing entries.`
+          `Reset sent cache for ${dayKey} so we can revisit the full photo stack.`
         );
         candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
       }
-      if (candidates.length === 0) {
-        console.log("No new items to send for today");
-        return;
-      }
+      return;
     }
-    console.log(`Found ${candidates.length} photos from ${month}/${day}`);
+    console.log(
+      `Found ${candidates.length} photos from ${month}/${day} to consider.`
+    );
 
     // 4) Detect bursts of photos
     const { chosen, burst: chosenBurst } = selectFromBursts(candidates);

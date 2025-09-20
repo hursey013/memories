@@ -4,11 +4,11 @@ import { photoUID } from "./utils.js";
 
 /** Synology client using list_with_filter and aggregated time ranges. */
 export class SynologyClient {
-  constructor({ ip, user, password, fotoSpace }) {
+  constructor({ ip, user, password, useTeamSpace = false }) {
     this.ip = ip;
     this.user = user;
     this.password = password;
-    this.fotoSpace = fotoSpace;
+    this.useTeamSpace = useTeamSpace;
   }
 
   async authenticate() {
@@ -46,7 +46,7 @@ export class SynologyClient {
     if (Array.isArray(time) && time.length > 0) {
       params.set("time", JSON.stringify(time));
     }
-    if (config.synology.fotoTeam) params.set("space", "team");
+    if (this.useTeamSpace) params.set("space", "team");
     const url = `https://${this.ip}/photo/webapi/entry.cgi?${params.toString()}&_sid=${sid}`;
 
     const data = await fetchJson(url, {
@@ -103,7 +103,6 @@ export class SynologyClient {
 
   getThumbnailUrl(sid, photo) {
     const {
-      id,
       additional: {
         thumbnail: { cache_key },
       },

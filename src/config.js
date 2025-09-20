@@ -23,7 +23,7 @@ export const config = {
     ip: requireEnv("NAS_IP"),
     user: requireEnv("USER_ID"),
     password: requireEnv("USER_PASSWORD"),
-    fotoSpace: process.env.FOTO_TEAM === "true" ? "FotoTeam" : "Foto",
+    useTeamSpace: process.env.FOTO_TEAM === "true",
     favoritePeople: (process.env.FAVORITE_PEOPLE || "")
       .split(",")
       .map((s) => s.toLowerCase().trim())

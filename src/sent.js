@@ -3,6 +3,10 @@ import path from "node:path";
 
 import { config } from "./config.js";
 
+/**
+ * Sent-cache helpers. Each calendar day lives in its own JSON file so we can
+ * grow the history without rewriting a gigantic blob on every run.
+ */
 export function makeDayKey(month, day) {
   return `${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }

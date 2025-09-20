@@ -4,6 +4,16 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 
 ---
 
+## Features
+
+- ✨ **Smart photo weighting** – Prioritizes favorites, faces, and photos with rich EXIF data so the best memories surface first.
+- 📸 **Burst/duplicate smoothing** – Detects rapid-fire shots and picks a single representative image to avoid spammy notifications.
+- 📅 **No repeat streaks** – Keeps a per-day history so you don’t see the same photo twice
+- 🎉 **Apprise integration** – Sends through Apprise, unlocking SMS, email, Discord, Pushbullet, Matrix, and every other channel Apprise supports.
+- 📦 **Docker-friendly** – Ships as a small Node.js container with environment-driven configuration—drop into Synology Container Manager or Compose and go.
+
+---
+
 ## What you need
 
 - A Synology NAS with **DSM** and **Synology Photos** enabled.
@@ -36,30 +46,30 @@ services:
     restart: unless-stopped
     environment:
       # --- Synology connection ---
-      NAS_IP: "your-nas-host-or-ip"
-      USER_ID: "memories" # your Synology username
-      USER_PASSWORD: "supersecret"
-      FOTO_TEAM: "false" # set "true" if you use Team folders
+      NAS_IP: "your-nas-host-or-ip" # Reachable host/IP for Synology Photos (HTTPS)
+      USER_ID: "memories" # DSM username with read access to your photos
+      USER_PASSWORD: "supersecret" # Password for that DSM account
+      FOTO_TEAM: "false" # Set to "true" when using Synology Team folders
 
       # --- Behavior & filtering ---
-      FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
-      IGNORED_PEOPLE: ""
-      MIN_YEAR: "2000" # Ignore photos taken before this year (still respects YEARS_BACK)
+      FAVORITE_PEOPLE: "" # Optional comma-separated list to prioritize
+      IGNORED_PEOPLE: "" # Optional comma-separated list to skip completely
+      MIN_YEAR: "2000" # Ignore photos taken before this year
       YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
-      DAY_OFFSET: "0" # Shift the queried calendar day (useful if Synology returns +1 day)
-      MIN_WEIGHT: "0" # Drop any photo whose computed weight is below this number
+      DAY_OFFSET: "-1" # Shift the queried calendar day (helps timezones)
+      MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
 
       # --- Scheduling (omit to run once and exit) ---
-      CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM
+      CRON_EXPRESSION: "0 9 * * *" # Run every day at 9:00 AM
 
       # --- Apprise (existing server) ---
       APPRISE_URL: "http://your-apprise-api:8000"
-      APPRISE_KEY: "" # if your Apprise API uses a key
+      APPRISE_KEY: "" # Provide if your Apprise API is keyed
       # OR stateless direct URLs (skip APPRISE_URL if using this):
       # APPRISE_URLS: "discord://webhook_id/webhook_token,mailto://to@example.com?from=me@example.com"
 
       # --- Timezone ---
-      TZ: "America/New_York"
+      TZ: "America/New_York" # Keeps cron/log output aligned with your morning
     volumes:
       - ./cache:/app/cache
 ```
@@ -93,24 +103,24 @@ services:
     environment:
       # --- Synology connection ---
       NAS_IP: "your-nas-host-or-ip"
-      USER_ID: "memories" # your Synology username
+      USER_ID: "memories"
       USER_PASSWORD: "supersecret"
-      FOTO_TEAM: "false" # set "true" if you use Team folders
+      FOTO_TEAM: "false"
 
       # --- Behavior & filtering ---
-      FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
+      FAVORITE_PEOPLE: ""
       IGNORED_PEOPLE: ""
-      MIN_YEAR: "2000" # Ignore photos taken before this year (still respects YEARS_BACK)
-      YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
-      DAY_OFFSET_DAYS: "0" # Shift the queried calendar day (useful if Synology returns +1 day)
-      MIN_WEIGHT: "0" # Drop any photo whose computed weight is below this number
+      MIN_YEAR: "2000"
+      YEARS_BACK: "0"
+      DAY_OFFSET: "-1"
+      MIN_WEIGHT: "3"
 
       # --- Scheduling (omit to run once and exit) ---
-      CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM
+      CRON_EXPRESSION: "0 9 * * *"
 
       # --- Apprise (existing server) ---
       APPRISE_URL: "http://your-apprise-api:8000"
-      APPRISE_KEY: "" # if your Apprise API uses a key
+      APPRISE_KEY: ""
       # OR stateless direct URLs (skip APPRISE_URL if using this):
       # APPRISE_URLS: "discord://webhook_id/webhook_token,mailto://to@example.com?from=me@example.com"
 
@@ -126,11 +136,44 @@ That’s it! Each run picks a “this day in history” item from your Synology 
 
 ---
 
+## How photo scoring works
+
+Every photo gets a “nostalgia score.” Higher numbers win, and anything below your `MIN_WEIGHT` value is skipped. Here’s the cheat sheet:
+
+| Signal                          | Score impact         |
+| ------------------------------- | -------------------- |
+| Favorites (your “VIPs”)         | +5 each (cap +10)    |
+| Named people (user curated)     | +2 each (cap +8)     |
+| Face count                      | +1 per face (cap +4) |
+| Unnamed faces                   | −1 each (cap −3)     |
+| EXIF present / camera model     | +1 / +3              |
+| No EXIF metadata at all         | −4                   |
+| Date nostalgia: 3–10 years old  | +2                   |
+| Date nostalgia: 10–20 years old | +1                   |
+| Tie-breaker jitter              | +0 to +0.25          |
+
+---
+
 ## Tips & FAQs
 
-- **Schedule or run once?** Set `CRON_EXPRESSION` to a cron string to run daily. If you leave it blank, Memories runs once and exits.
-- **Where does it store data?** In the `./cache` folder mounted on your NAS (JSON index to keep track of previouslhy sent photos in order to avoid repeats). Safe to delete if you want to force a rebuild.
-- **Stuck?** Check container logs in **Container Manager → Containers → memories → Logs** for helpful messages.
+- **Schedule or run once?** Leave `CRON_EXPRESSION` blank to run a single time. Add a cron string (like `0 8 * * *`) to send a hello every morning.
+- **Where is the cache?** Under the mounted `./cache` directory. You can safely delete it if you want to re-send older favorites; the app will rebuild it.
+- **Seeing tomorrow’s photo?** Set `DAY_OFFSET=-1` to nudge the query back a day.
+- **Need to tweak people filters?** Update `FAVORITE_PEOPLE` and `IGNORED_PEOPLE`, then restart the stack—the new weights apply immediately.
+- **Logs & troubleshooting.** Container Manager → **Containers → memories → Logs** will show friendly status messages and errors if Synology or Apprise push back.
+
+## Apprise
+
+New to Apprise? It’s an open-source notification router that can fan out a message to over 90 services—SMS gateways, email, Slack, Pushbullet, Discord, Matrix, you name it. Memories just needs the Apprise API to be running somewhere it can reach.
+
+1. **Spin up the API.** Easiest path: use the bundled compose example above. The container listens on port 8000 by default.
+2. **Decide on auth.**
+   - _Stateful mode_ (recommended): add a Key inside the Apprise web UI and provide it via `APPRISE_KEY`. This keeps your targets hidden server-side.
+   - _Stateless mode:_ skip the key and provide one or more target URLs in `APPRISE_URLS` (comma-separated), e.g. `discord://webhook/token,mailto://me@example.com`.
+3. **Add services.** Browse the [Apprise notification support matrix](https://github.com/caronc/apprise/wiki) to copy the right URL format for each service you want (Discord, Telegram, Pushover, etc.). If you’re using stateful mode, add these targets in the Apprise UI. For stateless mode, paste them directly into `APPRISE_URLS`.
+4. **Test it.** Hit your Apprise API’s `/notify` endpoint manually or run `curl` with a simple payload to confirm you get pinged. Once that works, Memories will reuse the same setup each morning.
+
+Need more detail? The Apprise docs include step-by-step guides for every integration and a handy command-line utility for testing locally: [https://github.com/caronc/apprise](https://github.com/caronc/apprise)
 
 ## Credits & Inspiration
 
