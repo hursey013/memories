@@ -65,7 +65,7 @@ async function buildInlineImageData(url) {
  * @param {string} [opts.tag]
  */
 export async function sendApprise({ title, body, attachments = [], tag } = {}) {
-  const { base, endpoint } = buildApprise();
+  const { endpoint } = buildApprise();
 
   // Stateless mode requires target URLs in a form field
   const urls = config.apprise.key

@@ -20,7 +20,9 @@ async function loadDay(dayKey) {
     const raw = await fs.readFile(entryPath(dayKey), "utf-8");
     const data = JSON.parse(raw);
     return data && typeof data === "object" ? data : {};
-  } catch {}
+  } catch {
+    /* intentionally ignore missing or malformed cache file */
+  }
   return {};
 }
 
@@ -71,6 +73,8 @@ export async function clearSentForDay(dayKey) {
   try {
     await fs.unlink(entryPath(dayKey));
     return true;
-  } catch {}
+  } catch {
+    /* cache shard did not exist */
+  }
   return false;
 }

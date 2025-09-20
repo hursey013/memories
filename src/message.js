@@ -4,8 +4,8 @@ export function buildMessage({ photoDate, address = {} }) {
   const dateText = photoDate.toLocaleString("en-US", { dateStyle: "long" });
   const locationParts = Object.entries(address)
     .filter(([key]) => !key.endsWith("_id"))
-    .filter(([_, value]) => Boolean(value))
-    .map(([_, value]) => value);
+    .filter(([, value]) => Boolean(value))
+    .map(([, value]) => value);
 
   return locationParts.length
     ? `Taken on ${dateText} — ${locationParts.join(", ")}`

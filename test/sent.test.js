@@ -1,7 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import test from 'node:test';
 
 process.env.SENT_DIR = './cache/test-sent';
 

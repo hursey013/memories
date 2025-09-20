@@ -1,7 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import test from 'node:test';
 
 const sentDir = './cache/test-integration';
 const envOverrides = {
@@ -100,7 +100,7 @@ config.apprise.url = process.env.APPRISE_URL;
 config.apprise.key = null;
 config.apprise.urls = 'mailto://test@example.com';
 
-const { runOnce } = await import('../src/index.js?integration');
+const { runOnce } = await import('../src/index.js');
 
 const cachePath = path.join(process.cwd(), sentDir);
 

@@ -1,10 +1,11 @@
 import { config } from "./config.js";
 
-const {
-  synology: { ignoredPeople, favoritePeople, minWeight },
-} = config;
-
 export function sortPhotosByWeight(items) {
+  const {
+    ignoredPeople = [],
+    favoritePeople = [],
+    minWeight = Number.NEGATIVE_INFINITY,
+  } = config.synology;
   // 1) Filter out photos containing ignored people
   const filtered = (items || []).filter((p) => {
     const people =
@@ -16,7 +17,7 @@ export function sortPhotosByWeight(items) {
   // 2) Score each photo
   const scored = filtered.map((p) => ({
     ...p,
-    weight: calculateWeight(p),
+    weight: calculateWeight(p, favoritePeople),
   }));
 
   const threshold = Number.isFinite(minWeight) ? minWeight : Number.NEGATIVE_INFINITY;
@@ -28,7 +29,7 @@ export function sortPhotosByWeight(items) {
   return aboveThreshold.sort((a, b) => b.weight - a.weight);
 }
 
-export function calculateWeight(p) {
+export function calculateWeight(p, favoritePeopleOverride = config.synology.favoritePeople) {
   let score = 0;
 
   // ---------- People-based signals ----------
@@ -40,8 +41,11 @@ export function calculateWeight(p) {
   const unnamedCount = Math.max(0, peopleNames.length - namedPeople.length);
 
   // Favorites (strong signal)
+  const favoriteList = Array.isArray(favoritePeopleOverride)
+    ? favoritePeopleOverride
+    : [];
   const favoriteCount = namedPeople.filter((n) =>
-    favoritePeople.includes(n.toLowerCase())
+    favoriteList.includes(n.toLowerCase())
   ).length;
   score += clamp(favoriteCount * 5, 0, 10); // up to +10
 

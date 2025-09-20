@@ -1,5 +1,5 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 // Configure weighting inputs before importing module under test
 process.env.FAVORITE_PEOPLE = 'alice';
@@ -58,12 +58,9 @@ test('lack of EXIF incurs penalty', () => {
   );
 });
 
-test('minWeight filters out photos below the threshold', async () => {
+test('minWeight filters out photos below the threshold', () => {
+  const originalMin = config.synology.minWeight;
   config.synology.minWeight = 3;
-  const { sortPhotosByWeight: sortWithThreshold } = await import(
-    '../src/weight.js?min=3'
-  );
-
   const items = [
     {
       id: 'low',
@@ -77,10 +74,10 @@ test('minWeight filters out photos below the threshold', async () => {
     },
   ];
 
-  const result = sortWithThreshold(items);
+  const result = sortPhotosByWeight(items);
   assert.equal(result.length, 1);
   assert.equal(result[0].id, 'fav');
-  config.synology.minWeight = Number(process.env.MIN_WEIGHT);
+  config.synology.minWeight = originalMin;
 });
 
 // restore Math.random

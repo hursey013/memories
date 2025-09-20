@@ -1,6 +1,4 @@
 /** Loads and validates environment configuration for the app. */
-import path from "node:path";
-
 import dotenv from "dotenv";
 
 dotenv.config();

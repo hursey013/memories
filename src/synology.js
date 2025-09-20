@@ -1,5 +1,5 @@
-import { fetchJson } from "./http.js";
 import { config } from "./config.js";
+import { fetchJson } from "./http.js";
 import { photoUID } from "./utils.js";
 
 /** Synology client using list_with_filter and aggregated time ranges. */
@@ -30,7 +30,9 @@ export class SynologyClient {
         retries: config.http.retries,
         insecure: true,
       });
-    } catch {}
+    } catch {
+      /* ignore logout failures */
+    }
   }
 
   async listItems({ sid, offset = 0, limit = 100, time }) {

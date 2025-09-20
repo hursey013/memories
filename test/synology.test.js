@@ -1,5 +1,5 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
+import test from 'node:test';
 
 const { SynologyClient } = await import('../src/synology.js');
 const { config } = await import('../src/config.js');
