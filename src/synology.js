@@ -35,6 +35,11 @@ export class SynologyClient {
     }
   }
 
+  /**
+   * Fetch paginated photo items from Synology Photos.
+   * @param {{ sid: string, offset?: number, limit?: number, time?: Array<any> }} params Request parameters.
+   * @returns {Promise<{ list: any[], total: number }>} Items and total count.
+   */
   async listItems({ sid, offset = 0, limit = 100, time }) {
     const params = new URLSearchParams({
       api: "SYNO.Foto.Browse.SimilarItem",
@@ -70,7 +75,12 @@ export class SynologyClient {
     return { start, end };
   }
 
-  /** Query only this month/day in each prior year using a single filtered request (with pagination). */
+  /**
+   * Query prior-year photos for the provided month/day using minimal API calls.
+   * @param {string} sid Session id returned from authenticate.
+   * @param {{ month: number, day: number }} param1 Calendar information.
+   * @returns {Promise<any[]>} Aggregated list of photo items.
+   */
   async listByMonthDayViaRanges(sid, { month, day }) {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -103,6 +113,12 @@ export class SynologyClient {
     return results;
   }
 
+  /**
+   * Build the Synology thumbnail URL for a photo.
+   * @param {string} sid Session id with access to the API.
+   * @param {any} photo Photo record containing thumbnail metadata.
+   * @returns {string} HTTPS URL for the thumbnail.
+   */
   getThumbnailUrl(sid, photo) {
     const {
       additional: {

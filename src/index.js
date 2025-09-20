@@ -20,6 +20,10 @@ import { sortPhotosByWeight } from "./weight.js";
 
 console.log(`🌅 Memories starting at ${new Date().toString()}`);
 
+/**
+ * Execute a single fetch/filter/send cycle for the current (or offset) day.
+ * @returns {Promise<void>}
+ */
 export async function runOnce() {
   const client = new SynologyClient({
     ip: config.synology.ip,

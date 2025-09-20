@@ -1,5 +1,10 @@
 import { config } from "./config.js";
 
+/**
+ * Sort the provided photo items by their calculated nostalgia weight.
+ * @param {Array<any>} items Photo records returned from Synology.
+ * @returns {Array<any>} Items sorted in descending weight order.
+ */
 export function sortPhotosByWeight(items) {
   const {
     ignoredPeople = [],
@@ -29,6 +34,12 @@ export function sortPhotosByWeight(items) {
   return aboveThreshold.sort((a, b) => b.weight - a.weight);
 }
 
+/**
+ * Compute the nostalgia weight for a photo.
+ * @param {any} p Photo record with `additional` metadata.
+ * @param {string[]} [favoritePeopleOverride] Optional favorite people list for testing overrides.
+ * @returns {number} Calculated weight (higher is better).
+ */
 export function calculateWeight(p, favoritePeopleOverride = config.synology.favoritePeople) {
   let score = 0;
 

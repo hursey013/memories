@@ -24,6 +24,11 @@ function escapeHtml(str = "") {
     .replace(/'/g, "&#39;");
 }
 
+/**
+ * Compose the HTML payload for an inline-email notification.
+ * @param {{ body?: string|null, inlineImageData?: string|null }} param0 Render options.
+ * @returns {string} HTML body ready for Apprise.
+ */
 function buildEmailBody({ body, inlineImageData }) {
   const fragments = [];
   const safeBody = escapeHtml(body || "");
@@ -38,6 +43,11 @@ function buildEmailBody({ body, inlineImageData }) {
   return html || "<p>Enjoy today’s Memory!</p>";
 }
 
+/**
+ * Fetch an image and convert it to a base64 data URI for inline embedding.
+ * @param {string|null} url Remote image URL to fetch.
+ * @returns {Promise<string|null>} Data URI or null when fetch fails.
+ */
 async function buildInlineImageData(url) {
   if (!url || typeof url !== "string" || !url.trim()) return null;
   try {
@@ -55,14 +65,9 @@ async function buildInlineImageData(url) {
 }
 
 /**
- * Send a notification via Apprise.
- * Only URL attachments are supported to keep things simple and reliable.
- *
- * @param {Object} opts
- * @param {string} [opts.title]
- * @param {string} [opts.body]
- * @param {string[]} [opts.attachments] - Array of URL strings
- * @param {string} [opts.tag]
+ * Submit a notification to Apprise (HTML inline email or standard payload).
+ * @param {{ title?: string, body?: string, attachments?: string[], tag?: string }} opts Message details.
+ * @returns {Promise<void>}
  */
 export async function sendApprise({ title, body, attachments = [], tag } = {}) {
   const { endpoint } = buildApprise();
