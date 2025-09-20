@@ -28,7 +28,7 @@ async function runOnce() {
 
   const sid = await client.authenticate();
   try {
-    const offsetDays = config.synology.dayOffsetDays || 0;
+    const offsetDays = config.synology.dayOffset || 0;
     const targetDate = new Date();
     if (offsetDays !== 0) targetDate.setDate(targetDate.getDate() + offsetDays);
     const month = targetDate.getMonth() + 1;
@@ -54,7 +54,9 @@ async function runOnce() {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
         sent = {};
-        console.log(`Reset sent cache for ${dayKey}; cleared existing entries.`);
+        console.log(
+          `Reset sent cache for ${dayKey}; cleared existing entries.`
+        );
         candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
       }
       if (candidates.length === 0) {
@@ -83,7 +85,9 @@ async function runOnce() {
     const whenISO = new Date().toISOString();
     for (const p of chosenBurst) {
       const timestampMs =
-        typeof p?.time === "number" && Number.isFinite(p.time) ? p.time * 1000 : null;
+        typeof p?.time === "number" && Number.isFinite(p.time)
+          ? p.time * 1000
+          : null;
       const photoDateForEntry = timestampMs ? new Date(timestampMs) : photoDate;
       markSent(sent, photoUID(p), {
         whenISO,

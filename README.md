@@ -44,10 +44,10 @@ services:
       # --- Behavior & filtering ---
       FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
       IGNORED_PEOPLE: ""
-      MIN_YEAR: 2000
-      YEARS_BACK: 0
-      DAY_OFFSET_DAYS: -1
-      MIN_WEIGHT: 0
+      MIN_YEAR: "2000" # Ignore photos taken before this year (still respects YEARS_BACK)
+      YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
+      DAY_OFFSET: "0" # Shift the queried calendar day (useful if Synology returns +1 day)
+      MIN_WEIGHT: "0" # Drop any photo whose computed weight is below this number
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM
@@ -100,10 +100,10 @@ services:
       # --- Behavior & filtering ---
       FAVORITE_PEOPLE: "" # e.g. "Test Person,Someone"
       IGNORED_PEOPLE: ""
-      MIN_YEAR: 2000
-      YEARS_BACK: 0
-      DAY_OFFSET_DAYS: -1
-      MIN_WEIGHT: 0
+      MIN_YEAR: "2000" # Ignore photos taken before this year (still respects YEARS_BACK)
+      YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
+      DAY_OFFSET_DAYS: "0" # Shift the queried calendar day (useful if Synology returns +1 day)
+      MIN_WEIGHT: "0" # Drop any photo whose computed weight is below this number
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # every day 9:00 AM

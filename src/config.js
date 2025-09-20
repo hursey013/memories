@@ -35,7 +35,7 @@ export const config = {
     yearsBack: toInt(process.env.YEARS_BACK || 0),
     minYear: toInt(process.env.MIN_YEAR || 2000),
     sentDir: process.env.SENT_DIR || "./cache",
-    dayOffsetDays: toInt(process.env.DAY_OFFSET_DAYS || 0),
+    dayOffset: toInt(process.env.DAY_OFFSET || 0),
     minWeight: toInt(process.env.MIN_WEIGHT, 0),
   },
   apprise: {
