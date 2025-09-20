@@ -35,7 +35,7 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 
 When prompted, choose **Create using docker‑compose**, then copy and paste one of the examples below directly into the editor. Adjust the values for your environment, then click **Next** to deploy.
 
-<details>
+<details open>
 
 <summary><h3>Option A — You already run Apprise API</h3></summary>
 
@@ -58,6 +58,7 @@ services:
       YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
       DAY_OFFSET: "-1" # Shift the queried calendar day (helps timezones)
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
+      INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # Run every day at 9:00 AM
@@ -114,6 +115,7 @@ services:
       YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
       DAY_OFFSET: "-1" # Shift the queried calendar day (helps timezones)
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
+      INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # Run every day at 9:00 AM
@@ -163,9 +165,12 @@ It’s an open-source notification router that can fan out a message to over 90 
    - _Stateful mode_ (recommended): add a Key inside the Apprise web UI and provide it via `APPRISE_KEY`. This keeps your targets hidden server-side.
    - _Stateless mode:_ skip the key and provide one or more target URLs in `APPRISE_URLS` (comma-separated), e.g. `discord://webhook/token,mailto://me@example.com`.
 3. **Add services.** Browse the [Apprise notification support matrix](https://github.com/caronc/apprise/wiki) to copy the right URL format for each service you want (Discord, Telegram, Pushover, etc.). If you’re using stateful mode, add these targets in the Apprise UI. For stateless mode, paste them directly into `APPRISE_URLS`.
-4. **Test it.** Hit your Apprise API’s `/notify` endpoint manually or run `curl` with a simple payload to confirm you get pinged. Once that works, Memories will reuse the same setup each morning.
+4. **Prefer email inline?** Set `INLINE_EMAIL=true`. Memories will fetch the photo, base64-embed it in an HTML `<img>` tag, and send the message as full HTML so the picture renders inline even if your mail server can’t reach Synology directly.
+5. **Test it.** Hit your Apprise API’s `/notify` endpoint manually or run `curl` with a simple payload to confirm you get pinged. Once that works, Memories will reuse the same setup each morning.
 
 Need more detail? The Apprise docs include step-by-step guides for every integration and a handy command-line utility for testing locally: [https://github.com/caronc/apprise](https://github.com/caronc/apprise)
+
+---
 
 ## Tips & FAQs
 

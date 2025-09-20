@@ -42,6 +42,7 @@ export const config = {
     url: process.env.APPRISE_URL || "http://apprise-api:8000",
     key: process.env.APPRISE_KEY || null,
     urls: process.env.APPRISE_URLS || null,
+    inlineEmail: process.env.INLINE_EMAIL === "true",
   },
   http: {
     timeoutMs: toInt(process.env.HTTP_TIMEOUT_MS, 15000),
