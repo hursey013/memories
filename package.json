@@ -11,7 +11,9 @@
     "dev": "node --watch src/index.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "test": "node --test",
+    "test:watch": "node --test --watch"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

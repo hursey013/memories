@@ -7,8 +7,8 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 ## Features
 
 - ✨ **Smart photo weighting** – Prioritizes favorites, faces, and photos with rich EXIF data so the best memories surface first.
-- 📸 **Burst/duplicate smoothing** – Detects rapid-fire shots and picks a single representative image to avoid spammy notifications.
-- 📅 **No repeat streaks** – Keeps a per-day history so you don’t see the same photo twice
+- 📸 **Burst smoothing** – Detects rapid-fire shots and picks a single representative image to avoid spammy notifications.
+- 📅 **No repeats** – Keeps a per-day history so you don’t see the same photo twice
 - 🎉 **Apprise integration** – Sends through Apprise, unlocking SMS, email, Discord, Pushbullet, Matrix, and every other channel Apprise supports.
 - 📦 **Docker-friendly** – Ships as a small Node.js container with environment-driven configuration—drop into Synology Container Manager or Compose and go.
 

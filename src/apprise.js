@@ -34,7 +34,8 @@ function buildEmailBody({ body, inlineImageData }) {
       `<p><img src="${imageSrc}" alt="Memories photo" style="max-width:100%; height:auto;"/></p>`
     );
   }
-  return fragments.join("");
+  const html = fragments.join("");
+  return html || "<p>Enjoy today’s Memory!</p>";
 }
 
 async function buildInlineImageData(url) {
@@ -138,3 +139,5 @@ export async function sendApprise({ title, body, attachments = [], tag } = {}) {
     throw new Error(`Apprise failed: ${res.status} ${text}`);
   }
 }
+
+export { buildEmailBody };
