@@ -180,6 +180,25 @@ Need more detail? The Apprise docs include step-by-step guides for every integra
 - **Need to tweak people filters?** Update `FAVORITE_PEOPLE` and `IGNORED_PEOPLE`, then restart the stack—the new weights apply immediately.
 - **Logs & troubleshooting.** Container Manager → **Containers → memories → Logs** will show friendly status messages and errors if Synology or Apprise push back.
 
+## Developer guide
+
+- **Install dependencies:** `npm ci`
+- **Run the test suite:** `npm test`
+- **Watch tests:** `npm run test:watch`
+- **Lint / format:** `npm run lint`, `npm run lint:fix`, `npm run format`
+
+### Testing strategy
+
+- `test/weight.test.js` keeps the nostalgia heuristics honest (favorites, ignored people, minimum weight, EXIF bonuses).
+- `test/sent.test.js` validates per-day cache helpers and shard cleanup.
+- `test/burst.test.js` covers burst grouping and representative selection.
+- `test/apprise.test.js` ensures HTML email formatting escapes content and falls back safely.
+- `test/synology.test.js` validates time-range construction and thumbnail URL generation.
+- `test/runOnce.integration.test.js` keeps end-to-end orchestration in check with mocked services.
+- `test/utils.test.js` protects helper behavior such as `photoUID` and `calculateYearsAgo`.
+
+GitHub Actions runs `npm test` on every push and pull request. When the tests pass on `main`, the same workflow builds the container, runs the suite inside it, and then publishes the Docker image to GHCR.
+
 ## Credits & Inspiration
 
 This project was inspired by [treyg/synology-photos-memories](https://github.com/treyg/synology-photos-memories) and also benefits from the excellent work documenting Synology’s unofficial API by [zeichensatz/SynologyPhotosAPI](https://github.com/zeichensatz/SynologyPhotosAPI).

@@ -1,4 +1,6 @@
 import cron from "node-cron";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 import { config } from "./config.js";
 import { SynologyClient } from "./synology.js";
@@ -18,7 +20,7 @@ import { selectFromBursts } from "./burst.js";
 
 console.log(`🌅 Memories starting at ${new Date().toString()}`);
 
-async function runOnce() {
+export async function runOnce() {
   const client = new SynologyClient({
     ip: config.synology.ip,
     user: config.synology.user,
@@ -107,12 +109,17 @@ async function runOnce() {
   }
 }
 
+const modulePath = fileURLToPath(import.meta.url);
+const isDirectRun = path.resolve(process.argv[1] || "") === modulePath;
+
 if (!config.cronExpression) {
-  runOnce().catch((err) => {
-    console.error("Run failed:", err);
-    process.exitCode = 1;
-  });
-} else {
+  if (isDirectRun) {
+    runOnce().catch((err) => {
+      console.error("Run failed:", err);
+      process.exitCode = 1;
+    });
+  }
+} else if (isDirectRun) {
   console.log(`Scheduling with cron: ${config.cronExpression}`);
   cron.schedule(config.cronExpression, () => {
     runOnce().catch((err) => console.error("Scheduled run failed:", err));
