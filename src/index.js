@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { sendApprise } from "./apprise.js";
 import { selectFromBursts } from "./burst.js";
 import { config } from "./config.js";
+import { logger } from "./logger.js";
 import { buildMessage } from "./message.js";
 import {
   loadSent,
@@ -18,7 +19,10 @@ import { SynologyClient } from "./synology.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 
-console.log(`🌅 Memories starting at ${new Date().toString()}`);
+logger.info('startup', {
+  message: 'Memories starting',
+  timestamp: new Date().toISOString(),
+});
 
 /**
  * Execute a single fetch/filter/send cycle for the current (or offset) day.
@@ -42,9 +46,12 @@ export async function runOnce() {
     const dayKey = makeDayKey(month, day);
 
     if (offsetDays !== 0) {
-      console.log(
-        `Applying day offset (${offsetDays}) -> querying ${month}/${day}`
-      );
+      logger.info('date.offset', {
+        offsetDays,
+        month,
+        day,
+        dayKey,
+      });
     }
 
     // 1) Ask the NAS only for items for this calendar day across prior years
@@ -60,16 +67,17 @@ export async function runOnce() {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
         sent = {};
-        console.log(
-          `Reset sent cache for ${dayKey} so we can revisit the full photo stack.`
-        );
+        logger.info('cache.reset', { dayKey, reason: 'no_candidates' });
         candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
       }
       return;
     }
-    console.log(
-      `Found ${candidates.length} photos from ${month}/${day} to consider.`
-    );
+    logger.info('photos.considered', {
+      count: candidates.length,
+      month,
+      day,
+      dayKey,
+    });
 
     // 4) Detect bursts of photos
     const { chosen, burst: chosenBurst } = selectFromBursts(candidates);
@@ -102,12 +110,11 @@ export async function runOnce() {
     }
     await saveSent(dayKey, sent);
 
-    console.log(
-      `Notification sent. Burst size: ${chosenBurst.length}. Chosen UID: ${photoUID(
-        chosen
-      )}`,
-      chosen
-    );
+    logger.info('apprise.sent', {
+      burstSize: chosenBurst.length,
+      chosen: photoUID(chosen),
+      dayKey,
+    });
   } finally {
     await client.logout(sid);
   }
@@ -119,13 +126,13 @@ const isDirectRun = path.resolve(process.argv[1] || "") === modulePath;
 if (!config.cronExpression) {
   if (isDirectRun) {
     runOnce().catch((err) => {
-      console.error("Run failed:", err);
+      logger.error('run.failed', { error: err });
       process.exitCode = 1;
     });
   }
 } else if (isDirectRun) {
-  console.log(`Scheduling with cron: ${config.cronExpression}`);
+  logger.info('cron.schedule', { expression: config.cronExpression });
   cron.schedule(config.cronExpression, () => {
-    runOnce().catch((err) => console.error("Scheduled run failed:", err));
+    runOnce().catch((err) => logger.error('run.failed', { error: err }));
   });
 }
