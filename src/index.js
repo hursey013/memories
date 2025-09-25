@@ -19,7 +19,8 @@ import { SynologyClient } from "./synology.js";
 import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 
-logger.info('startup', {
+logger.info({
+  event: 'startup',
   message: 'Memories starting',
   timestamp: new Date().toISOString(),
 });
@@ -46,7 +47,8 @@ export async function runOnce() {
     const dayKey = makeDayKey(month, day);
 
     if (offsetDays !== 0) {
-      logger.info('date.offset', {
+      logger.info({
+        event: 'date.offset',
         offsetDays,
         month,
         day,
@@ -67,12 +69,13 @@ export async function runOnce() {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
         sent = {};
-        logger.info('cache.reset', { dayKey, reason: 'no_candidates' });
+        logger.info({ event: 'cache.reset', dayKey, reason: 'no_candidates' });
         candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
       }
       return;
     }
-    logger.info('photos.considered', {
+    logger.info({
+      event: 'photos.considered',
       count: candidates.length,
       month,
       day,
@@ -110,7 +113,8 @@ export async function runOnce() {
     }
     await saveSent(dayKey, sent);
 
-    logger.info('apprise.sent', {
+    logger.info({
+      event: 'apprise.sent',
       burstSize: chosenBurst.length,
       chosen: photoUID(chosen),
       dayKey,
@@ -126,13 +130,13 @@ const isDirectRun = path.resolve(process.argv[1] || "") === modulePath;
 if (!config.cronExpression) {
   if (isDirectRun) {
     runOnce().catch((err) => {
-      logger.error('run.failed', { error: err });
+      logger.error({ event: 'run.failed', err });
       process.exitCode = 1;
     });
   }
 } else if (isDirectRun) {
-  logger.info('cron.schedule', { expression: config.cronExpression });
+  logger.info({ event: 'cron.schedule', expression: config.cronExpression });
   cron.schedule(config.cronExpression, () => {
-    runOnce().catch((err) => logger.error('run.failed', { error: err }));
+    runOnce().catch((err) => logger.error({ event: 'run.failed', err }));
   });
 }
