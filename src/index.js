@@ -20,8 +20,8 @@ import { photoUID, calculateYearsAgo } from "./utils.js";
 import { sortPhotosByWeight } from "./weight.js";
 
 logger.info({
-  event: 'startup',
-  message: 'Memories starting',
+  event: "startup",
+  message: "Memories starting",
   timestamp: new Date().toISOString(),
 });
 
@@ -48,7 +48,7 @@ export async function runOnce() {
 
     if (offsetDays !== 0) {
       logger.info({
-        event: 'date.offset',
+        event: "date.offset",
         offsetDays,
         month,
         day,
@@ -69,13 +69,13 @@ export async function runOnce() {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
         sent = {};
-        logger.info({ event: 'cache.reset', dayKey, reason: 'no_candidates' });
+        logger.info({ event: "cache.reset", dayKey, reason: "no_candidates" });
         candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
       }
       return;
     }
     logger.info({
-      event: 'photos.considered',
+      event: "photos.considered",
       count: candidates.length,
       month,
       day,
@@ -114,9 +114,9 @@ export async function runOnce() {
     await saveSent(dayKey, sent);
 
     logger.info({
-      event: 'apprise.sent',
+      event: "apprise.sent",
       burstSize: chosenBurst.length,
-      chosen: photoUID(chosen),
+      chosen,
       dayKey,
     });
   } finally {
@@ -130,13 +130,13 @@ const isDirectRun = path.resolve(process.argv[1] || "") === modulePath;
 if (!config.cronExpression) {
   if (isDirectRun) {
     runOnce().catch((err) => {
-      logger.error({ event: 'run.failed', err });
+      logger.error({ event: "run.failed", err });
       process.exitCode = 1;
     });
   }
 } else if (isDirectRun) {
-  logger.info({ event: 'cron.schedule', expression: config.cronExpression });
+  logger.info({ event: "cron.schedule", expression: config.cronExpression });
   cron.schedule(config.cronExpression, () => {
-    runOnce().catch((err) => logger.error({ event: 'run.failed', err }));
+    runOnce().catch((err) => logger.error({ event: "run.failed", err }));
   });
 }

@@ -8,10 +8,10 @@ import { photoUID } from "./utils.js";
  *   the one that appears earlier in the given candidate order (assumed weight-desc).
  *
  * @param {Array<any>} candidates Weighted, unsent photos (ideally weight-desc order)
- * @param {{ windowSec?: number }} opts Options; windowSec defaults to 5 seconds
+ * @param {{ windowSec?: number }} opts Options; windowSec defaults to 10 seconds
  * @returns {{ chosen: any|null, burst: any[]|[], bursts: any[][] }}
  */
-export function selectFromBursts(candidates, { windowSec = 5 } = {}) {
+export function selectFromBursts(candidates, { windowSec = 10 } = {}) {
   if (!Array.isArray(candidates) || candidates.length === 0) {
     return { chosen: null, burst: [], bursts: [] };
   }
@@ -76,4 +76,3 @@ export function selectFromBursts(candidates, { windowSec = 5 } = {}) {
 
   return { chosen, burst: chosenBurst, bursts };
 }
-
