@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { sendApprise } from "./apprise.js";
 import { selectFromBursts } from "./burst.js";
 import { config } from "./config.js";
-import { logger } from "./logger.js";
+import logger from "./logger.js";
 import { buildMessage } from "./message.js";
 import {
   loadSent,

@@ -1,8 +1,24 @@
-# Memories — “On This Day” from Synology Photos
+<p align="center">
+  <picture>
+    <img alt="Memories logo" src="assets/logo.svg" width="160" height="160">
+  </picture>
+</p>
+
+<h1 align="center">memories</h1>
+
+<p align="center">
+  Synology Photos “on this day” reminders delivered through Apprise.
+</p>
+
+<p align="center">
+  <a href="https://github.com/hursey013/memories/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/hursey013/memories/ci.yml?label=CI&logo=github"></a>
+  <a href="https://github.com/hursey013/memories/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-0EA5E9"></a>
+  <a href="https://ghcr.io/hursey013/memories"><img alt="Image" src="https://img.shields.io/badge/ghcr-image-blue"></a>
+</p>
+
+## Say hello to memories
 
 Memories picks a photo taken **on this day in past years** from your Synology Photos library and sends it to you through **Apprise** (SMS/MMS, Push, Email, Discord, etc.). Wake up to a little nostalgia ☕📸
-
----
 
 ## Features
 
@@ -10,7 +26,7 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 - 📸 **Burst smoothing** – Detects rapid-fire shots and picks a single representative image to avoid spammy notifications.
 - 📅 **No repeats** – Keeps a per-day history so you don’t see the same photo twice
 - 🎉 **Apprise integration** – Sends through Apprise, unlocking SMS, email, Discord, Pushbullet, Matrix, and every other channel Apprise supports.
-- 📦 **Docker-friendly** – Ships as a small Node.js container with environment-driven configuration—drop into Synology Container Manager or Compose and go.
+- 📦 **Docker-friendly** – Ships as a small Node.js container with environment-driven configuration—drop straight into Synology Container Manager’s Project editor and go.
 
 ---
 

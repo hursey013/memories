@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">memories</title>
+  <desc id="desc">Stacked instant photos framed by a soft gradient circle with a heart accent.</desc>
+
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="memories-ring" x1="48" y1="32" x2="208" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="memories-photo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F9A8D4"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background halo -->
+  <circle cx="128" cy="128" r="112" fill="url(#memories-ring)" opacity="0.35"/>
+
+  <!-- Back photo -->
+  <g transform="translate(128 128)">
+    <rect x="-78" y="-82" width="148" height="148" rx="18" fill="#F1F5F9" stroke="#0F172A" stroke-width="6" opacity="0.55" transform="rotate(-16)"/>
+  </g>
+
+  <!-- Front photo -->
+  <g transform="translate(128 128)">
+    <rect x="-74" y="-78" width="148" height="148" rx="18" fill="#FFFFFF" stroke="#0F172A" stroke-width="6" transform="rotate(8)"/>
+    <rect x="-60" y="-58" width="120" height="96" rx="12" fill="url(#memories-photo)" transform="rotate(8)"/>
+    <path d="M0.5 -4.5C0.5 -12.5 6 -19 14 -19C20.5 -19 25.5 -14.5 28 -9.5C30.5 -14.5 35.5 -19 42 -19C50 -19 55.5 -12.5 55.5 -4.5C55.5 12 28 26 28 26C28 26 0.5 12 0.5 -4.5Z" fill="#FFFFFF" stroke="#0F172A" stroke-width="4" transform="translate(-6 20) rotate(8)"/>
+    <circle cx="32" cy="4" r="10" fill="#FACC15" stroke="#0F172A" stroke-width="4" transform="rotate(8)"/>
+  </g>
+
+  <!-- Sparkles -->
+  <path d="M60 78L66 90L78 96L66 102L60 114L54 102L42 96L54 90Z" fill="#FACC15" opacity="0.7"/>
+  <path d="M196 188L200 196L208 200L200 204L196 212L192 204L184 200L192 196Z" fill="#FFFFFF" opacity="0.6"/>
+</svg>
