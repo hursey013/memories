@@ -48,5 +48,8 @@ export const config = {
     timeoutMs: toInt(process.env.HTTP_TIMEOUT_MS, 15000),
     retries: toInt(process.env.HTTP_RETRIES, 1),
   },
+  healthchecks: {
+    pingUrl: process.env.HEALTHCHECKS_PING_URL || null,
+  },
   cronExpression: process.env.CRON_EXPRESSION || null,
 };

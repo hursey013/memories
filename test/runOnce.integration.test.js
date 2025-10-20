@@ -21,6 +21,7 @@ const envOverrides = {
   APPRISE_KEY: '',
   INLINE_EMAIL: 'false',
   TZ: 'UTC',
+  HEALTHCHECKS_PING_URL: 'http://health.test/ping',
 };
 
 const previousEnv = {};
@@ -32,12 +33,17 @@ for (const [key, value] of Object.entries(envOverrides)) {
 const originalMathRandom = Math.random;
 Math.random = () => 0;
 
-const calls = { synology: [], apprise: [] };
+const calls = { synology: [], apprise: [], healthchecks: [] };
 const realFetch = globalThis.fetch;
 
 globalThis.fetch = async (input, init = {}) => {
   const url = typeof input === 'string' ? input : input.url;
   calls.synology.push({ url, init });
+
+  if (url.startsWith('http://health.test/ping')) {
+    calls.healthchecks.push({ url, init });
+    return new Response('', { status: 200 });
+  }
 
   if (url.includes('auth.cgi') && url.includes('method=login')) {
     return new Response(JSON.stringify({ data: { sid: 'sid123' }, success: true }), {
@@ -92,6 +98,7 @@ const { config } = await import('../src/config.js');
 const originalConfig = {
   synology: { ...config.synology },
   apprise: { ...config.apprise },
+  healthchecks: { ...config.healthchecks },
 };
 config.synology.sentDir = sentDir;
 config.synology.ip = process.env.NAS_IP;
@@ -99,6 +106,7 @@ config.apprise.inlineEmail = false;
 config.apprise.url = process.env.APPRISE_URL;
 config.apprise.key = null;
 config.apprise.urls = 'mailto://test@example.com';
+config.healthchecks.pingUrl = process.env.HEALTHCHECKS_PING_URL;
 
 const { runOnce } = await import('../src/index.js');
 
@@ -132,6 +140,16 @@ await test('runOnce sends apprise payload and records sent photo', async () => {
   const keys = Object.keys(data);
   assert.equal(keys.length, 1, 'expected one sent entry recorded');
   assert.equal(data[keys[0]].timesSent, 1);
+
+  assert.equal(
+    calls.healthchecks.length,
+    2,
+    'expected healthchecks start and success pings'
+  );
+  assert.equal(calls.healthchecks[0].url, 'http://health.test/ping/start');
+  assert.equal(calls.healthchecks[0].init?.method ?? 'get', 'get');
+  assert.equal(calls.healthchecks[1].url, 'http://health.test/ping');
+  assert.equal(calls.healthchecks[1].init?.method, 'post');
 });
 
 await fs.rm(cachePath, { recursive: true, force: true });
@@ -144,6 +162,7 @@ config.apprise.inlineEmail = originalConfig.apprise.inlineEmail;
 config.apprise.url = originalConfig.apprise.url;
 config.apprise.key = originalConfig.apprise.key;
 config.apprise.urls = originalConfig.apprise.urls;
+config.healthchecks.pingUrl = originalConfig.healthchecks.pingUrl;
 
 for (const [key, value] of Object.entries(previousEnv)) {
   if (value === undefined) delete process.env[key];

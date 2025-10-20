@@ -5,6 +5,11 @@ import { fileURLToPath } from "node:url";
 import { sendApprise } from "./apprise.js";
 import { selectFromBursts } from "./burst.js";
 import { config } from "./config.js";
+import {
+  notifyHealthcheckFailure,
+  notifyHealthcheckStart,
+  notifyHealthcheckSuccess,
+} from "./healthchecks.js";
 import logger from "./logger.js";
 import { buildMessage } from "./message.js";
 import {
@@ -29,6 +34,12 @@ logger.info({
  * @returns {Promise<void>}
  */
 export async function runOnce() {
+  const startedAt = Date.now();
+  let sid;
+  let dayKey = null;
+
+  await notifyHealthcheckStart();
+
   const client = new SynologyClient({
     ip: config.synology.ip,
     user: config.synology.user,
@@ -36,14 +47,15 @@ export async function runOnce() {
     useTeamSpace: config.synology.useTeamSpace,
   });
 
-  const sid = await client.authenticate();
   try {
+    sid = await client.authenticate();
+
     const offsetDays = config.synology.dayOffset || 0;
     const targetDate = new Date();
     if (offsetDays !== 0) targetDate.setDate(targetDate.getDate() + offsetDays);
     const month = targetDate.getMonth() + 1;
     const day = targetDate.getDate();
-    const dayKey = makeDayKey(month, day);
+    dayKey = makeDayKey(month, day);
 
     if (offsetDays !== 0) {
       logger.info({
@@ -79,6 +91,19 @@ export async function runOnce() {
 
     let ranked = sortPhotosByWeight(items, sent);
     let candidates = filterForRun(ranked);
+
+    const sendSkipPing = async (reason, candidateCount = 0) => {
+      await notifyHealthcheckSuccess({
+        status: "skipped",
+        reason,
+        dayKey,
+        timestamp: new Date().toISOString(),
+        elapsedMs: Date.now() - startedAt,
+        rankedCount: ranked.length,
+        candidateCount,
+      });
+    };
+
     if (candidates.length === 0) {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
@@ -87,7 +112,13 @@ export async function runOnce() {
         ranked = sortPhotosByWeight(items, sent);
         candidates = filterForRun(ranked);
       }
-      if (candidates.length === 0) return;
+      if (candidates.length === 0) {
+        await sendSkipPing(
+          cleared ? "no_candidates_after_reset" : "no_candidates",
+          0
+        );
+        return;
+      }
     }
     logger.info({
       event: "photos.considered",
@@ -135,8 +166,35 @@ export async function runOnce() {
       chosen,
       dayKey,
     });
+
+    await notifyHealthcheckSuccess({
+      status: "sent",
+      dayKey,
+      burstSize: chosenBurst.length,
+      rankedCount: ranked.length,
+      candidateCount: candidates.length,
+      repeatsConsidered: candidates.filter((p) => p.timesSent > 0).length,
+      timestamp: new Date().toISOString(),
+      elapsedMs: Date.now() - startedAt,
+    });
+  } catch (err) {
+    await notifyHealthcheckFailure({
+      status: "error",
+      dayKey,
+      timestamp: new Date().toISOString(),
+      elapsedMs: Date.now() - startedAt,
+      error:
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+          ? err
+          : "Unknown error",
+    });
+    throw err;
   } finally {
-    await client.logout(sid);
+    if (sid) {
+      await client.logout(sid);
+    }
   }
 }
 

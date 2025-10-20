@@ -78,6 +78,9 @@ services:
       REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
       INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
+      # --- Observability ---
+      HEALTHCHECKS_PING_URL: "" # Optional healthchecks.io project URL for uptime pings
+
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # Run every day at 9:00 AM
 
@@ -136,6 +139,9 @@ services:
       REPEAT_PENALTY: "3" # Points to subtract for each time a photo was already sent
       REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
       INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
+
+      # --- Observability ---
+      HEALTHCHECKS_PING_URL: "" # Optional healthchecks.io project URL for uptime pings
 
       # --- Scheduling (omit to run once and exit) ---
       CRON_EXPRESSION: "0 9 * * *" # Run every day at 9:00 AM
@@ -199,6 +205,7 @@ Need more detail? The Apprise docs include step-by-step guides for every integra
 - **Seeing tomorrow’s photo?** Set `DAY_OFFSET=-1` to nudge the query back a day.
 - **Need to tweak people filters?** Update `FAVORITE_PEOPLE` and `IGNORED_PEOPLE`, then restart the stack—the new weights apply immediately.
 - **Want classics to pop back up sooner?** Lower `REPEAT_PENALTY` (default 3). Raise it—or bump `REPEAT_PENALTY_CAP`—when you want longer gaps before repeats.
+- **Need uptime tracking?** Point `HEALTHCHECKS_PING_URL` at a project ping URL and Memories will report start/success/failure for each run.
 - **Logs & troubleshooting.** Container Manager → **Containers → memories → Logs** will show friendly status messages and errors if Synology or Apprise push back.
 
 ## Credits & Inspiration
