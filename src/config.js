@@ -35,6 +35,8 @@ export const config = {
     sentDir: process.env.SENT_DIR || "./cache",
     dayOffset: toInt(process.env.DAY_OFFSET || 0),
     minWeight: toInt(process.env.MIN_WEIGHT, 0),
+    repeatPenalty: toInt(process.env.REPEAT_PENALTY, 3),
+    repeatPenaltyCap: toInt(process.env.REPEAT_PENALTY_CAP, 12),
   },
   apprise: {
     url: process.env.APPRISE_URL || "http://apprise-api:8000",

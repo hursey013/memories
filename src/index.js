@@ -10,7 +10,6 @@ import { buildMessage } from "./message.js";
 import {
   loadSent,
   saveSent,
-  wasSent,
   markSent,
   clearSentForDay,
   makeDayKey,
@@ -59,24 +58,41 @@ export async function runOnce() {
     // 1) Ask the NAS only for items for this calendar day across prior years
     const items = await client.listByMonthDayViaRanges(sid, { month, day });
 
-    // 2) Rank photos
-    const filtered = sortPhotosByWeight(items);
-
-    // 3) Filter unsent and select within "bursts" (photos within 5s)
+    // 2) Load sent history and rank photos with repeat penalties applied
     let sent = await loadSent(dayKey);
-    let candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
+    const filterForRun = (pool) => {
+      const now = new Date();
+      return pool.filter((p) => {
+        const entry = sent?.[photoUID(p)];
+        if (!entry) return true;
+        const whenISO = entry.when || entry.whenISO;
+        if (!whenISO) return true;
+        const last = new Date(whenISO);
+        if (Number.isNaN(last.valueOf())) return true;
+        return !(
+          last.getFullYear() === now.getFullYear() &&
+          last.getMonth() === now.getMonth() &&
+          last.getDate() === now.getDate()
+        );
+      });
+    };
+
+    let ranked = sortPhotosByWeight(items, sent);
+    let candidates = filterForRun(ranked);
     if (candidates.length === 0) {
       const cleared = await clearSentForDay(dayKey);
       if (cleared) {
         sent = {};
         logger.info({ event: "cache.reset", dayKey, reason: "no_candidates" });
-        candidates = filtered.filter((p) => !wasSent(sent, photoUID(p)));
+        ranked = sortPhotosByWeight(items, sent);
+        candidates = filterForRun(ranked);
       }
-      return;
+      if (candidates.length === 0) return;
     }
     logger.info({
       event: "photos.considered",
       count: candidates.length,
+      repeats: candidates.filter((p) => p.timesSent > 0).length,
       month,
       day,
       dayKey,

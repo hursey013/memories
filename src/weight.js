@@ -1,15 +1,18 @@
 import { config } from "./config.js";
+import { photoUID } from "./utils.js";
 
 /**
  * Sort the provided photo items by their calculated nostalgia weight.
  * @param {Array<any>} items Photo records returned from Synology.
  * @returns {Array<any>} Items sorted in descending weight order.
  */
-export function sortPhotosByWeight(items) {
+export function sortPhotosByWeight(items, sentMap = {}) {
   const {
     ignoredPeople = [],
     favoritePeople = [],
     minWeight = Number.NEGATIVE_INFINITY,
+    repeatPenalty = 0,
+    repeatPenaltyCap = Number.POSITIVE_INFINITY,
   } = config.synology;
   // 1) Filter out photos containing ignored people
   const filtered = (items || []).filter((p) => {
@@ -20,14 +23,44 @@ export function sortPhotosByWeight(items) {
   });
 
   // 2) Score each photo
-  const scored = filtered.map((p) => ({
-    ...p,
-    weight: calculateWeight(p, favoritePeople),
-  }));
+  const scored = filtered.map((p) => {
+    const baseWeight = calculateWeight(p, favoritePeople);
+    const uid = photoUID(p);
+    const history = sentMap?.[uid];
+    const historyCountRaw =
+      history && typeof history.timesSent === "number"
+        ? history.timesSent
+        : history
+        ? 1
+        : 0;
+
+    const penaltyPerReplay = Number.isFinite(repeatPenalty)
+      ? Math.max(repeatPenalty, 0)
+      : 0;
+    const penaltyCap = Number.isFinite(repeatPenaltyCap)
+      ? Math.max(repeatPenaltyCap, 0)
+      : Number.POSITIVE_INFINITY;
+
+    let appliedPenalty = 0;
+    if (penaltyPerReplay > 0 && historyCountRaw > 0) {
+      appliedPenalty = historyCountRaw * penaltyPerReplay;
+      if (Number.isFinite(penaltyCap)) {
+        appliedPenalty = Math.min(appliedPenalty, penaltyCap);
+      }
+    }
+
+    return {
+      ...p,
+      baseWeight,
+      weight: baseWeight - appliedPenalty,
+      repeatPenalty: appliedPenalty,
+      timesSent: historyCountRaw,
+    };
+  });
 
   const threshold = Number.isFinite(minWeight) ? minWeight : Number.NEGATIVE_INFINITY;
   const aboveThreshold = scored.filter(
-    (p) => (p.weight ?? Number.NEGATIVE_INFINITY) >= threshold
+    (p) => (p.baseWeight ?? p.weight ?? Number.NEGATIVE_INFINITY) >= threshold
   );
 
   // 3) Sort best-first

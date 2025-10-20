@@ -131,6 +131,7 @@ await test('runOnce sends apprise payload and records sent photo', async () => {
   const data = JSON.parse(await fs.readFile(firstFile, 'utf-8'));
   const keys = Object.keys(data);
   assert.equal(keys.length, 1, 'expected one sent entry recorded');
+  assert.equal(data[keys[0]].timesSent, 1);
 });
 
 await fs.rm(cachePath, { recursive: true, force: true });

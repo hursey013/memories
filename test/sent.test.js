@@ -21,6 +21,7 @@ test('markSent stores ISO timestamp and derived day when photo provided', () => 
   assert.equal(map['photo-1'].when, '2024-09-18T10:00:00Z');
   assert.equal(map['photo-1'].photoDateISO, photoDate.toISOString());
   assert.equal(map['photo-1'].photoTimestamp, photoDate.getTime());
+  assert.equal(map['photo-1'].timesSent, 1);
 });
 
 test('wasSent returns true only for stored ids', () => {
@@ -35,6 +36,14 @@ test('markSent handles missing photo metadata gracefully', () => {
   assert.ok(map['plain-id']);
   assert.equal(map['plain-id'].photoDateISO, null);
   assert.equal(map['plain-id'].photoTimestamp, null);
+  assert.equal(map['plain-id'].timesSent, 1);
+});
+
+test('markSent increments timesSent for repeated photos', () => {
+  const map = {};
+  markSent(map, 'repeat-id', { whenISO: '2023-01-01T00:00:00Z' });
+  markSent(map, 'repeat-id', { whenISO: '2024-01-01T00:00:00Z' });
+  assert.equal(map['repeat-id'].timesSent, 2);
 });
 
 test('clearSentForDay removes existing cache shard', async () => {

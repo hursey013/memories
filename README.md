@@ -24,7 +24,7 @@ Memories picks a photo taken **on this day in past years** from your Synology Ph
 
 - ✨ **Smart photo weighting** – Prioritizes favorites, faces, and photos with rich EXIF data so the best memories surface first.
 - 📸 **Burst smoothing** – Detects rapid-fire shots and picks a single representative image to avoid spammy notifications.
-- 📅 **No repeats** – Keeps a per-day history so you don’t see the same photo twice
+- 🔄 **Thoughtful rotation** – Previously shared photos take a gentle score penalty, keeping fresh shots in the lead while still letting beloved ones return occasionally.
 - 🎉 **Apprise integration** – Sends through Apprise, unlocking SMS, email, Discord, Pushbullet, Matrix, and every other channel Apprise supports.
 - 📦 **Docker-friendly** – Ships as a small Node.js container with environment-driven configuration—drop straight into Synology Container Manager’s Project editor and go.
 
@@ -74,6 +74,8 @@ services:
       YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
       DAY_OFFSET: "-1" # Shift the queried calendar day (helps timezones)
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
+      REPEAT_PENALTY: "3" # Points to subtract for each time a photo was already sent
+      REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
       INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Scheduling (omit to run once and exit) ---
@@ -131,6 +133,8 @@ services:
       YEARS_BACK: "0" # Limit to this many years back (0 = no limit beyond MIN_YEAR)
       DAY_OFFSET: "-1" # Shift the queried calendar day (helps timezones)
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
+      REPEAT_PENALTY: "3" # Points to subtract for each time a photo was already sent
+      REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
       INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Scheduling (omit to run once and exit) ---
@@ -194,6 +198,7 @@ Need more detail? The Apprise docs include step-by-step guides for every integra
 - **Where is the cache?** Under the mounted `./cache` directory. You can safely delete it if you want to re-send older favorites; the app will rebuild it.
 - **Seeing tomorrow’s photo?** Set `DAY_OFFSET=-1` to nudge the query back a day.
 - **Need to tweak people filters?** Update `FAVORITE_PEOPLE` and `IGNORED_PEOPLE`, then restart the stack—the new weights apply immediately.
+- **Want classics to pop back up sooner?** Lower `REPEAT_PENALTY` (default 3). Raise it—or bump `REPEAT_PENALTY_CAP`—when you want longer gaps before repeats.
 - **Logs & troubleshooting.** Container Manager → **Containers → memories → Logs** will show friendly status messages and errors if Synology or Apprise push back.
 
 ## Credits & Inspiration

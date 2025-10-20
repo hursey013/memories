@@ -90,16 +90,29 @@ export function markSent(
 ) {
   let photoDateISO = null;
   let derivedPhotoTimestamp = photoTimestamp;
+  const previous = map[uid] || {};
+  const priorCount =
+    typeof previous.timesSent === "number"
+      ? previous.timesSent
+      : previous && typeof previous.when === "string"
+      ? 1
+      : 0;
 
   if (photoDate instanceof Date && !Number.isNaN(photoDate.valueOf())) {
     derivedPhotoTimestamp = derivedPhotoTimestamp ?? photoDate.getTime();
     photoDateISO = photoDate.toISOString();
   }
 
+  const nextPhotoTimestamp =
+    derivedPhotoTimestamp ?? previous.photoTimestamp ?? null;
+  const nextPhotoDateISO = photoDateISO ?? previous.photoDateISO ?? null;
+
   map[uid] = {
+    ...previous,
     when: whenISO,
-    photoTimestamp: derivedPhotoTimestamp,
-    photoDateISO,
+    photoTimestamp: nextPhotoTimestamp,
+    photoDateISO: nextPhotoDateISO,
+    timesSent: priorCount + 1,
   };
   return map;
 }
