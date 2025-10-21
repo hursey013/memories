@@ -12,6 +12,7 @@
 
 <p align="center">
   <a href="https://github.com/hursey013/memories/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/hursey013/memories/ci.yml?label=CI&logo=github"></a>
+  <a href="#"><img src="https://healthchecks.io/b/2/cc1d6404-6121-4d11-9d21-5a13d7862e6f.svg" alt="memories"></a>
   <a href="https://github.com/hursey013/memories/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-0EA5E9"></a>
   <a href="https://ghcr.io/hursey013/memories"><img alt="Image" src="https://img.shields.io/badge/ghcr-image-blue"></a>
 </p>
