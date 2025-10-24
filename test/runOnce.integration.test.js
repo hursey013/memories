@@ -19,7 +19,6 @@ const envOverrides = {
   SENT_DIR: sentDir,
   APPRISE_URL: 'http://apprise.test',
   APPRISE_KEY: '',
-  INLINE_EMAIL: 'false',
   TZ: 'UTC',
   HEALTHCHECKS_PING_URL: 'http://health.test/ping',
 };
@@ -102,7 +101,6 @@ const originalConfig = {
 };
 config.synology.sentDir = sentDir;
 config.synology.ip = process.env.NAS_IP;
-config.apprise.inlineEmail = false;
 config.apprise.url = process.env.APPRISE_URL;
 config.apprise.key = null;
 config.apprise.urls = 'mailto://test@example.com';
@@ -158,7 +156,6 @@ globalThis.fetch = realFetch;
 Math.random = originalMathRandom;
 config.synology.sentDir = originalConfig.synology.sentDir;
 config.synology.ip = originalConfig.synology.ip;
-config.apprise.inlineEmail = originalConfig.apprise.inlineEmail;
 config.apprise.url = originalConfig.apprise.url;
 config.apprise.key = originalConfig.apprise.key;
 config.apprise.urls = originalConfig.apprise.urls;

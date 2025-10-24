@@ -12,7 +12,6 @@
 
 <p align="center">
   <a href="https://github.com/hursey013/memories/actions"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/hursey013/memories/ci.yml?label=CI&logo=github"></a>
-  <a href="#"><img src="https://healthchecks.io/b/2/cc1d6404-6121-4d11-9d21-5a13d7862e6f.svg" alt="memories"></a>
   <a href="https://github.com/hursey013/memories/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-0EA5E9"></a>
   <a href="https://ghcr.io/hursey013/memories"><img alt="Image" src="https://img.shields.io/badge/ghcr-image-blue"></a>
 </p>
@@ -77,7 +76,6 @@ services:
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
       REPEAT_PENALTY: "3" # Points to subtract for each time a photo was already sent
       REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
-      INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Observability ---
       HEALTHCHECKS_PING_URL: "" # Optional healthchecks.io project URL for uptime pings
@@ -139,7 +137,6 @@ services:
       MIN_WEIGHT: "3" # Minimum score a photo must reach to be considered
       REPEAT_PENALTY: "3" # Points to subtract for each time a photo was already sent
       REPEAT_PENALTY_CAP: "12" # Optional ceiling so classics can still bubble up
-      INLINE_EMAIL: "false" # Set true to embed photos inline in HTML email
 
       # --- Observability ---
       HEALTHCHECKS_PING_URL: "" # Optional healthchecks.io project URL for uptime pings
@@ -169,17 +166,23 @@ That’s it! Each run picks a “this day in history” item from your Synology 
 
 Every photo gets a “nostalgia score.” Higher numbers win, and anything below your `MIN_WEIGHT` value is skipped. Here’s the cheat sheet:
 
-| Signal                          | Score impact         |
-| ------------------------------- | -------------------- |
-| Favorites (your “VIPs”)         | +5 each (cap +10)    |
-| Named people (user curated)     | +2 each (cap +8)     |
-| Face count                      | +1 per face (cap +4) |
-| Unnamed faces                   | −1 each (cap −3)     |
-| EXIF present / camera model     | +1 / +3              |
-| No EXIF metadata at all         | −4                   |
-| Date nostalgia: 3–10 years old  | +2                   |
-| Date nostalgia: 10–20 years old | +1                   |
-| Tie-breaker jitter              | +0 to +0.25          |
+| Signal                          | Score impact                                            |
+| ------------------------------- | ------------------------------------------------------- |
+| Favorites (your “VIPs”)         | +5 each (cap +10)                                       |
+| Named people (user curated)     | +2 each (cap +8)                                        |
+| Face count                      | +1 per face (cap +4)                                    |
+| Unnamed faces                   | −1 each (cap −3)                                        |
+| EXIF present / camera model     | +1 / +3                                                 |
+| No EXIF metadata at all         | −4                                                      |
+| Already sent before             | −`REPEAT_PENALTY` each time (cap −`REPEAT_PENALTY_CAP`) |
+| Date nostalgia: 3–10 years old  | +2                                                      |
+| Date nostalgia: 10–20 years old | +1                                                      |
+| Tie-breaker jitter              | +0 to +0.25                                             |
+
+Each time a photo gets delivered, its base score is reduced by `REPEAT_PENALTY`
+(default 3) on future runs. That reduction stacks until it reaches the optional
+`REPEAT_PENALTY_CAP` (default 12), keeping repeats in circulation but making
+room for fresher shots to win first.
 
 ---
 
@@ -192,22 +195,9 @@ It’s an open-source notification router that can fan out a message to over 90 
    - _Stateful mode_ (recommended): add a Key inside the Apprise web UI and provide it via `APPRISE_KEY`. This keeps your targets hidden server-side.
    - _Stateless mode:_ skip the key and provide one or more target URLs in `APPRISE_URLS` (comma-separated), e.g. `discord://webhook/token,mailto://me@example.com`.
 3. **Add services.** Browse the [Apprise notification support matrix](https://github.com/caronc/apprise/wiki) to copy the right URL format for each service you want (Discord, Telegram, Pushover, etc.). If you’re using stateful mode, add these targets in the Apprise UI. For stateless mode, paste them directly into `APPRISE_URLS`.
-4. **Prefer email inline?** Set `INLINE_EMAIL=true`. Memories will fetch the photo, base64-embed it in an HTML `<img>` tag, and send the message as full HTML so the picture renders inline even if your mail server can’t reach Synology directly.
-5. **Test it.** Hit your Apprise API’s `/notify` endpoint manually or run `curl` with a simple payload to confirm you get pinged. Once that works, Memories will reuse the same setup each morning.
+4. **Test it.** Hit your Apprise API’s `/notify` endpoint manually or run `curl` with a simple payload to confirm you get pinged. Once that works, Memories will reuse the same setup each morning.
 
 Need more detail? The Apprise docs include step-by-step guides for every integration and a handy command-line utility for testing locally: [https://github.com/caronc/apprise](https://github.com/caronc/apprise)
-
----
-
-## Tips & FAQs
-
-- **Schedule or run once?** Leave `CRON_EXPRESSION` blank to run a single time. Add a cron string (like `0 8 * * *`) to send a hello every morning.
-- **Where is the cache?** Under the mounted `./cache` directory. You can safely delete it if you want to re-send older favorites; the app will rebuild it.
-- **Seeing tomorrow’s photo?** Set `DAY_OFFSET=-1` to nudge the query back a day.
-- **Need to tweak people filters?** Update `FAVORITE_PEOPLE` and `IGNORED_PEOPLE`, then restart the stack—the new weights apply immediately.
-- **Want classics to pop back up sooner?** Lower `REPEAT_PENALTY` (default 3). Raise it—or bump `REPEAT_PENALTY_CAP`—when you want longer gaps before repeats.
-- **Need uptime tracking?** Point `HEALTHCHECKS_PING_URL` at a project ping URL and Memories will report start/success/failure for each run.
-- **Logs & troubleshooting.** Container Manager → **Containers → memories → Logs** will show friendly status messages and errors if Synology or Apprise push back.
 
 ## Credits & Inspiration
 
